@@ -1,7 +1,7 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import ssl
 
-from constants import MAX_REQUEST, MAX_SIZE, HTTP_VERSION, CODES, SSL_CERT
+from vars.constants import MAX_REQUEST, MAX_SIZE, HTTP_VERSION, CODES, SSL_CERT
 
 """
     Parses incoming client request from the socket and returns necessary information

@@ -6,6 +6,23 @@ HTTP_VERSION = "HTTP/1.1"
 
 SSL_CERT = os.path.join(os.getcwd(), "server.pem")
 
+GREETING = r"""
+  _    _  ____  _   _ ________     _______   ____ _______ 
+ | |  | |/ __ \| \ | |  ____\ \   / /  __ \ / __ \__   __|
+ | |__| | |  | |  \| | |__   \ \_/ /| |__) | |  | | | |   
+ |  __  | |  | | . ` |  __|   \   / |  ___/| |  | | | |   
+ | |  | | |__| | |\  | |____   | |  | |    | |__| | | |   
+ |_|  |_|\____/|_| \_|______|  |_|  |_|     \____/  |_|   
+                                                    
+"""
+
+HELP = """
+Usage:\tpython3.7 myserver.py <IP> <PORT>
+
+AVAILABLE COMMANDS:
+- GET
+- HEAD
+"""
 # Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py
 CODES = {
         200: ('OK', 'Request fulfilled, document follows'), 

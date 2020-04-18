@@ -7,7 +7,7 @@ import threading
 import time
 
 from http_helper import parse_request, create_response, create_tcp_sock     # Function imports
-from constants import MAX_REQUEST
+from vars.constants import MAX_REQUEST, GREETING, HELP
 
 
 """
@@ -87,14 +87,11 @@ def dispatch_connection(client_sock, client_addr):
 def main(args):
     if len(args) != 3:
         if len(args) == 2 and args[1] is "help":
-            print("""HTTPS Server by Chris Cohen
-                Supported HTTP Requests:
-                GET
-                HEAD
-                """)
+            print(HELP)
         else:
             print("Usage:\npython3.7 myserver.py <IP> <PORT>")
     else:
+        print(GREETING)
         server_sock = create_tcp_sock(args[1], int(args[2]))     # Creates server socket with IP and PORT specified in arguments
 
         # Infinite loop makes sure server doesn't terminate after accepting a connection
