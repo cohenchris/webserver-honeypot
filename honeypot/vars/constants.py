@@ -4,6 +4,9 @@ HTTP_VERSION = "HTTP/1.1"
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
 
+AUTH_FILE = "vars/auth.txt"
+NEEDS_AUTHORIZATION = ["http_root/cgi-bin/print_logs.py"]
+
 SSL_CERT = "vars/cert.pem"
 SSL_KEY = "vars/key.pem"
 ROOT = "http_root/"

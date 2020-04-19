@@ -2,10 +2,24 @@ import ssl
 from os import walk, path, getcwd
 from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
 import subprocess
-from .constants import (CODES, HTTP_VERSION, MAX_REQUEST, MAX_SIZE, ROOT,
+from .constants import (AUTH_FILE, CODES, HTTP_VERSION, MAX_REQUEST, MAX_SIZE, ROOT,
                         SSL_CERT, SSL_KEY)
 
 
+"""
+    Checks headers for request and determines if the client is authorized to view the file or not
+"""
+def is_authorized(headers):
+    auth_entry = [h for h in headers if "Authorization: Basic " in h]
+
+    if not auth_entry:
+        return False
+
+    client_auth = auth_entry[0].split()[-1].strip()
+    with open(AUTH_FILE, 'r') as auth:
+        server_auth = auth.readline().strip()
+
+    return server_auth == client_auth
 """
     Parses incoming client request from the socket and returns necessary information
 """
@@ -90,10 +104,14 @@ def get_data(filepath, file_size, code):
 def create_response(code, command, filepath, response_headers, file_size=0):
     filetype, content_type = get_content_type(code, filepath)                                 # Content type of msg to send
     response_data = get_data(filepath, file_size, code)                             # Data to send
-
+    
     response = HTTP_VERSION + " " + str(code) + " " + CODES[code][0] + "\r\n"       # HTTP/1.1 <code> <reason_phrase>
+    if code == 401:
+            # 401 Unauthorized response must include Authorization Header
+            response += 'WWW-Authenticate: Basic realm="ChrisCohen-Webserver"'
     response += "Content-Length: " + str(len(response_data)) + "\r\n"               # Content-Length: <len>
     response += f"Content-Type: {content_type}\r\n\r\n"                             # Content-Type: <type>
+    
     
     return response, response_data
 

@@ -8,8 +8,8 @@ from socket import socket
 from stat import ST_SIZE
 
 from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
-                            MAX_REQUEST, VALID_REQUESTS)
-from vars.http_helper import (create_response, create_tcp_sock, get_filepath,
+                            MAX_REQUEST, NEEDS_AUTHORIZATION, VALID_REQUESTS)
+from vars.http_helper import (is_authorized, create_response, create_tcp_sock, get_filepath,
                               parse_request)
 
 
@@ -61,15 +61,19 @@ def dispatch_connection(client_sock, client_addr):
             readable = os.access(filepath, os.R_OK)
 
             if readable:
-                # File has correct permissions --> send 200 OK and file data
-                file_size = os.stat(filepath).st_size
-                response, response_data = create_response(200, client_command, filepath, headers, file_size)
+                authorized = filepath not in NEEDS_AUTHORIZATION or is_authorized(headers)
+                if not authorized:
+                    # The client is not authorized to view the file at 'filename' --> send 401 Unauthorized
+                    response, response_data = create_response(401, client_command, filepath, headers)
+                else:
+                    # File has correct permissions --> send 200 OK and file data
+                    file_size = os.stat(filepath).st_size
+                    response, response_data = create_response(200, client_command, filepath, headers, file_size)
             else:
                 # File does NOT have correct permissions --> send 403 Forbidden
                 response, response_data = create_response(403, client_command, filepath, headers)
         else:
             # File is not present in 'http_root' folder --> send 404
-            print(f"FILEPATH = {filepath}")
             response, response_data = create_response(404, client_command, filepath, headers)
 
         client_sock.send(response.encode())
