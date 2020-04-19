@@ -1,14 +1,16 @@
 import os
-from select import select
-from socket import socket
 import ssl
 import sys
-from stat import ST_SIZE
 import threading
 import time
+from select import select
+from socket import socket
+from stat import ST_SIZE
 
-from http_helper import parse_request, create_response, create_tcp_sock     # Function imports
-from vars.constants import MAX_REQUEST, GREETING, HELP
+from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
+                            MAX_REQUEST, VALID_REQUESTS)
+from vars.http_helper import (create_response, create_tcp_sock, get_filepath,
+                              parse_request)
 
 
 """
@@ -35,40 +37,50 @@ def dispatch_connection(client_sock, client_addr):
             break
         else:
             # TODO: enter request into database
-            print("REQUEST =        " + str(client_request[0]))
-            client_command, client_request_uri, headers = parse_request(client_request)            
+            #print("REQUEST = " + str(client_request[0]))
+            client_command, filepath, version, headers = parse_request(client_request)
+            print(f"command: {client_command}\nfilepath: {filepath}\nversion: {version}")
 
         #############################################
         ##### CREATE HTTP RESPONSE AND GET DATA #####
         #############################################
-        available_files = os.listdir("./Upload/")
-        if client_command != "GET" and client_command != "HEAD":
-            # Command is invalid, send 405 Not Allowed
-            response, response_data = create_response(405, client_command, client_request_uri, headers)
-        elif client_request_uri in available_files:
-            # File is present in 'Upload' folder
+        if client_command is None and filepath is None and version is None and headers is None:
+            # Client request has error --> 400 Bad Request
+            response, response_data = create_response(400, client_command, filepath, headers)
+        elif version != HTTP_VERSION:
+            # HTTP Version invalid, send 505 HTTP Version Not Supported
+            response, response_data = create_response(505, client_command, filepath, headers)
+        elif client_command not in VALID_REQUESTS:
+            if client_command not in INVALID_REQUESTS:
+                # Command not recognized, send 501 Not Implemented
+                response, response_data = create_response(501, client_command, filepath, headers)
+            else:
+                # Command is invalid, send 405 Not Allowed
+                response, response_data = create_response(405, client_command, filepath, headers)
 
+        elif filepath is not None:
             # Check if file has read permissions
-            readable = os.access("./Upload/" + client_request_uri, os.R_OK)
+            readable = os.access(filepath, os.R_OK)
 
             if readable:
                 # File has correct permissions --> send 200 OK and file data
-                file_size = os.stat("./Upload/" + client_request_uri).st_size
-                response, response_data = create_response(200, client_command, client_request_uri, headers, file_size)
+                file_size = os.stat(filepath).st_size
+                response, response_data = create_response(200, client_command, filepath, headers, file_size)
             else:
                 # File does NOT have correct permissions --> send 403 Forbidden
-                response, response_data = create_response(403, client_command, client_request_uri, headers)
+                response, response_data = create_response(403, client_command, filepath, headers)
         else:
-            # File is not present in 'Upload' folder --> send 404
-            response, response_data = create_response(404, client_command, client_request_uri, headers)
+            # File is not present in 'http_root' folder --> send 404
+            print(f"FILEPATH = {filepath}")
+            response, response_data = create_response(404, client_command, filepath, headers)
 
         client_sock.send(response.encode())
-        
+
         if client_command != "HEAD":
             # 'HEAD' only sends headers, not data
             client_sock.send(response_data if type(response_data) is bytes else response_data.encode())
 
-        if "Connection: close" in headers:
+        if headers and "Connection: close" in headers:
             # Last file requested
             break
 
@@ -80,6 +92,9 @@ def dispatch_connection(client_sock, client_addr):
                                         ########## MAIN ##########
                                         ##########################
 def main(args):
+    args.append("127.0.0.1")
+    args.append(12345)
+
     if len(args) != 3:
         print(HELP)
     else:
@@ -95,7 +110,7 @@ def main(args):
                 print(f"accepted connection with address {client_addr}")
                 threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
             except ssl.SSLError as e:
-                print(f"ERROR: {e}")
+                print(f"SSL ERROR: {e}")
             except OSError as e:
                 print(f"SOCKET TIMEOUT: {e}")
                 if client_sock:

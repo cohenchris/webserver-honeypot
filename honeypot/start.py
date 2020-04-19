@@ -1,4 +1,4 @@
-from subprocess import call, PIPE
+from subprocess import call
 import os
 
 PORT = 12345

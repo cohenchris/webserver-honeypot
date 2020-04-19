@@ -1,6 +1,3 @@
-#import pandas as pd
-#import numpy as np
-#import matplotlib.pyplot as plt
 import pyodbc
 import sys
 
@@ -52,7 +49,7 @@ def log(ip, port, request):
         print("\t", e)
 
 """
-    Prints the entire table that's passed in
+    Prints the entire log table
 """
 def print_table():
     try:
@@ -102,6 +99,6 @@ def create_log_table():
         print("\t", e)
 
 if __name__ == "__main__":
-    create_log_table()
-    log("127.0.0.1", 42069, "HTTP/1.1 GET /")
-    print_table()
+    #create_log_table()
+    log("8.8.8.8", 42069, "HTTP/1.1 GET /")
+    #print_table()
