@@ -4,9 +4,9 @@ HTTP_VERSION = "HTTP/1.1"
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
 
-SSL_CERT = "honeypot/vars/cert.pem"
-SSL_KEY = "honeypot/vars/key.pem"
-ROOT = "honeypot/http_root/"
+SSL_CERT = "vars/cert.pem"
+SSL_KEY = "vars/key.pem"
+ROOT = "http_root/"
 
 GREETING = r"""
   _    _  ____  _   _ ________     _______   ____ _______ 

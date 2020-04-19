@@ -37,9 +37,7 @@ def dispatch_connection(client_sock, client_addr):
             break
         else:
             # TODO: enter request into database
-            #print("REQUEST = " + str(client_request[0]))
             client_command, filepath, version, headers = parse_request(client_request)
-            print(f"command: {client_command}\nfilepath: {filepath}\nversion: {version}")
 
         #############################################
         ##### CREATE HTTP RESPONSE AND GET DATA #####
