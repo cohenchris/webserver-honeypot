@@ -4,7 +4,7 @@ MAX_REQUEST = 1024
 MAX_SIZE = 1000000          # Max file size is 1MB
 HTTP_VERSION = "HTTP/1.1"
 
-SSL_CERT = os.path.join(os.getcwd(), "server.pem")
+SSL_CERT = os.path.join(os.getcwd(), "vars/server.pem")
 
 GREETING = r"""
   _    _  ____  _   _ ________     _______   ____ _______ 
@@ -16,12 +16,12 @@ GREETING = r"""
                                                     
 """
 
-HELP = """
-Usage:\tpython3.7 myserver.py <IP> <PORT>
+HELP = """\
+Usage:\tpython3 myserver.py <IP> <PORT>
 
 AVAILABLE COMMANDS:
 - GET
-- HEAD
+- HEAD\
 """
 # Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py
 CODES = {
@@ -36,7 +36,7 @@ CODES = {
         401: ('Unauthorized', 'No permission -- see authorization schemes'), 
         402: ('Payment Required', 'No payment -- see charging schemes'), 
         403: ('Forbidden', 'Request forbidden -- authorization will not help'), 
-        404: ('Not Found', 'The requested resource ($path) is not available.'), 
+        404: ('Not Found', 'The requested resource is not available.'), 
         405: ('Method Not Allowed', 'Specified method is invalid for this resource.'), 
         406: ('Not Acceptable', 'URI not available in preferred format.'), 
         407: ('Proxy Authentication Required', 'You must authenticate with this proxy before proceeding.'), 

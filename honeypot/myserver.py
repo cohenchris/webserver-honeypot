@@ -1,8 +1,9 @@
 import os
+from select import select
 from socket import socket
+import ssl
 import sys
 from stat import ST_SIZE
-from select import select
 import threading
 import time
 
@@ -22,13 +23,10 @@ def dispatch_connection(client_sock, client_addr):
         # This infinite loop keeps handling requests until socket requested to close
 
         # Extract client request header (going to -2 leaves out last /r/n)
-        socket_ready = select([client_sock], [], [], 15)
-        if socket_ready[0]:
+        try:
             client_request = client_sock.recv(MAX_REQUEST).decode().split("\r\n")[:-2]
-            #print("REQUEST =        " + str(client_request))
-        else:
-            client_sock.close()
-            print("ERROR: Socket Timeout")
+        except Exception as e:
+            print(f"ERROR recv(): {e}")
             break
 
         if not client_request:
@@ -36,8 +34,9 @@ def dispatch_connection(client_sock, client_addr):
             print("Terminating connection with address " + str(client_addr))
             break
         else:
+            # TODO: enter request into database
+            print("REQUEST =        " + str(client_request[0]))
             client_command, client_request_uri, headers = parse_request(client_request)            
-            send_file = False
 
         #############################################
         ##### CREATE HTTP RESPONSE AND GET DATA #####
@@ -50,13 +49,12 @@ def dispatch_connection(client_sock, client_addr):
             # File is present in 'Upload' folder
 
             # Check if file has read permissions
-            readable = os.access("./Upload/" + client_request_uri, os.R_OK)             # TODO: is this sufficient for 403?
+            readable = os.access("./Upload/" + client_request_uri, os.R_OK)
 
             if readable:
                 # File has correct permissions --> send 200 OK and file data
                 file_size = os.stat("./Upload/" + client_request_uri).st_size
                 response, response_data = create_response(200, client_command, client_request_uri, headers, file_size)
-                send_file = True
             else:
                 # File does NOT have correct permissions --> send 403 Forbidden
                 response, response_data = create_response(403, client_command, client_request_uri, headers)
@@ -66,11 +64,8 @@ def dispatch_connection(client_sock, client_addr):
 
         client_sock.send(response.encode())
         
-        if client_command == "HEAD":
+        if client_command != "HEAD":
             # 'HEAD' only sends headers, not data
-            send_file = False
-
-        if send_file:
             client_sock.send(response_data if type(response_data) is bytes else response_data.encode())
 
         if "Connection: close" in headers:
@@ -86,19 +81,27 @@ def dispatch_connection(client_sock, client_addr):
                                         ##########################
 def main(args):
     if len(args) != 3:
-        if len(args) == 2 and args[1] is "help":
-            print(HELP)
-        else:
-            print("Usage:\npython3.7 myserver.py <IP> <PORT>")
+        print(HELP)
     else:
         print(GREETING)
-        server_sock = create_tcp_sock(args[1], int(args[2]))     # Creates server socket with IP and PORT specified in arguments
+        server_sock, context = create_tcp_sock(args[1], int(args[2]))     # Creates server socket with IP and PORT specified in arguments
 
         # Infinite loop makes sure server doesn't terminate after accepting a connection
         while True:
-            client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
-            print("accepted connection with address " + str(client_addr))
-            threading.Thread(target=dispatch_connection, args=(client_sock, client_addr)).start()
+            ssl_client_conn = None
+            try:
+                client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
+                ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
+                print(f"accepted connection with address {client_addr}")
+                threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
+            except ssl.SSLError as e:
+                print(f"ERROR: {e}")
+            except OSError as e:
+                print(f"SOCKET TIMEOUT: {e}")
+                if client_sock:
+                    print(f"Client socket {client_addr} closed...")
+                    client_sock.close()
+                    break
 
 if __name__ == "__main__":
     main(sys.argv)

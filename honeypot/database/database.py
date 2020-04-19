@@ -5,7 +5,7 @@ import pyodbc
 import sys
 
 TABLE = "logfile"
-COLUMNS = "(username, ip, port, request, filename)"
+COLUMNS = "(username, ip, port, request)"
 
 KNOWN_USERS = {
     "127.0.0.1"     :   "localhost",
@@ -34,10 +34,11 @@ def connect():
 """
     Adds entry to the SQL table
 """
-def log(ip, port, request, filename):
+def log(ip, port, request):
     cursor = connect()
     username = get_username(ip)
-    vals = f"('{username}', '{ip}', {port}, '{request}', '{filename}')" if username is not None else f"(NULL, '{ip}', {port}, '{request}', '{filename}')"
+    #vals = f"('{username}', '{ip}', {port}, '{request}', '{filename}')" if username is not None else f"(NULL, '{ip}', {port}, '{request}', '{filename}')"
+    vals = f"('{username}', '{ip}', {port}, '{request}')" if username is not None else f"(NULL, '{ip}', {port}, '{request}')"
     query = f"""
             INSERT INTO {TABLE} {COLUMNS}
             VALUES {vals};
@@ -47,7 +48,7 @@ def log(ip, port, request, filename):
         cursor.execute(query)
         cursor.commit()
     except Exception as e:
-        print(f"ERROR: Failed to add entry ({ip}, {port}, {request}, {filename})")
+        print(f"ERROR: Failed to add entry ({ip}, {port}, {request})")
         print("\t", e)
 
 """
@@ -58,13 +59,20 @@ def print_table():
         cursor = connect()
         cursor.execute("SELECT * from " + TABLE)
         row = cursor.fetchone()
-        print("------------------------ ENTIRE TABLE ------------------------")
-        print("| #\t   hostname\t   ip_addr\t port\t  req\tfile |")
-        print("--------------------------------------------------------------")
+        print("--------------------------------- ENTIRE TABLE ----------------------------------")
+        print("| #\ttime\t\thostname\tip_addr\t\tport\treq\t\t|")
+        print("---------------------------------------------------------------------------------")
         while row:
-            print('| ' + '\t'.join(str(row).split(',')).strip('()') + ' |')
+            print('  ', end='')
+            for val in range(len(row) - 1):
+                if val == 1:
+                    print(str(row[val]).split()[-1].split('.')[0], end='\t')
+                else:
+                    print(str(row[val]), end='\t')
+            print(row[-1], end='')
+            print('  ')
             row = cursor.fetchone()
-        print("--------------------------------------------------------------")
+        print("---------------------------------------------------------------------------------")
     except Exception as e:
         print("ERROR: Unable to print table")
         print("\t", e)
@@ -80,11 +88,11 @@ def create_log_table():
         CREATE TABLE {TABLE}
         (
             num         int NOT NULL IDENTITY(1, 1),
+            timestamp   DATETIME NOT NULL DEFAULT(GETDATE()),
             username    varchar(30),
             ip          varchar(15) NOT NULL,
             port        int NOT NULL,
-            request     varchar(10) NOT NULL,
-            filename    varchar(30) NOT NULL
+            request     varchar(50) NOT NULL,
         );
         """
         )
@@ -94,4 +102,6 @@ def create_log_table():
         print("\t", e)
 
 if __name__ == "__main__":
+    create_log_table()
+    log("127.0.0.1", 42069, "HTTP/1.1 GET /")
     print_table()
