@@ -39,22 +39,31 @@ def main():
 
         cursor.execute("SELECT * from " + TABLE)
         row = cursor.fetchone()
-        table += ("------------------------------------------ SERVER LOGS ------------------------------------------\n")
-        table += ("| #\tdate\t\ttime\t\thostname\tip_addr\t\tport\treq\t\t|\n")
-        table += ("-------------------------------------------------------------------------------------------------\n")
+        table += ("-"*50 + " SERVER LOGS " + "-"*50 + "\n")
+        table += "  "
+        table += "#".ljust(3)
+        table += "date".ljust(12)
+        table += "time".ljust(17)
+        table += "hostname".ljust(20)
+        table += "ip_addr".ljust(15)
+        table += "port".ljust(7)
+        table += "request\n"
+        table += ("-"*113 + "\n")
         while row:
             table += '  '
-            for val in range(len(row) - 1):
-                if val == 1:
-                    curr_date = str(row[val]).split()[0]
-                    curr_time = str(row[val]).split()[1]
-                    table += f"{curr_date}\t{curr_time}\t"
-                else:
-                    table += str(row[val]) + '\t'
-            table += row[-1]
+            table += str(row[0]).ljust(3)              # entry number
+            curr_date = str(row[1]).split()[0]
+            curr_time = str(row[1]).split()[1]
+            table += curr_date.ljust(12)               # date
+            table += curr_time.ljust(17)               # time
+            table += str(row[2]).ljust(20)             # hostame
+            table += str(row[3]).ljust(15)             # ip
+            table += str(row[4]).ljust(7)              # port
+            table += str(row[5])                       # request
+
             table += '  \n'
             row = cursor.fetchone()
-        table += ("-------------------------------------------------------------------------------------------------\n")
+        table += ("-"*113 + "\n")
     except Exception as e:
         table += "ERROR: Unable to print table\n"
         table += f"\t{e}"

@@ -4,9 +4,9 @@ HTTP_VERSION = "HTTP/1.1"
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
 
-SSL_CERT = "vars/cert.pem"
-SSL_KEY = "vars/key.pem"
-ROOT = "http_root/"
+SSL_CERT = "honeypot/vars/cert.pem"
+SSL_KEY = "honeypot/vars/key.pem"
+ROOT = "honeypot/http_root/"
 
 GREETING = r"""
   _    _  ____  _   _ ________     _______   ____ _______ 
@@ -61,7 +61,7 @@ CODES = {
         411: ('Length Required', 'Client must specify Content-Length.'),                                   # 
         412: ('Precondition Failed', 'Precondition in headers is false.'),                                 # 
         413: ('Request Entity Too Large', 'Entity is too large.'),                                         # 
-        414: ('Request-URI Too Long', 'URI is too long.'),                                                 # ????
+        414: ('Request-URI Too Long', 'URI is too long.'),                                                 #
         415: ('Unsupported Media Type', 'Entity body in unsupported format.'),                             # 
         416: ('Requested Range Not Satisfiable', 'Cannot satisfy request range.'),                         # 
         417: ('Expectation Failed', 'Expect condition could not be satisfied.'),                           # 
