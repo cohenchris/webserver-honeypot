@@ -51,7 +51,7 @@ CODES = {
         307: ('Temporary Redirect', 'Object moved temporarily -- see URI list'),                           # 
 
         400: ('Bad Request', 'Bad request syntax or unsupported method'),                                  # y
-        401: ('Unauthorized', 'No permission -- see authorization schemes'),                               # 
+        401: ('Unauthorized', 'No permission -- see authorization schemes'),                               # y
         402: ('Payment Required', 'No payment -- see charging schemes'),                                   # 
         403: ('Forbidden', 'Request forbidden -- authorization will not help'),                            # y
         404: ('Not Found', 'The requested resource is not available.'),                                    # y
@@ -71,8 +71,8 @@ CODES = {
         
         500: ('Internal Server Error', 'Server got itself in trouble'),                                    # 
         501: ('Not Implemented', 'Server does not support this operation'),                                # y
-        502: ('Bad Gateway', 'Invalid responses from another server/proxy.'),                              # 
+        502: ('Bad Gateway', 'Invalid responses from another server/proxy.'),                              #
         503: ('Service Unavailable', 'The server cannot process the request due to a high load'),          # 
-        504: ('Gateway Timeout', 'The gateway server did not receive a timely response'),                  # 
+        504: ('Gateway Timeout', 'The gateway server did not receive a timely response'),                  #
         505: ('HTTP Version Not Supported', 'Cannot fulfill request.')                                     # y
 }

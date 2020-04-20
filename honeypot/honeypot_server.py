@@ -9,8 +9,9 @@ from stat import ST_SIZE
 
 from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
                             MAX_REQUEST, NEEDS_AUTHORIZATION, VALID_REQUESTS)
-from vars.http_helper import (is_authorized, create_response, create_tcp_sock, get_filepath,
-                              parse_request)
+from vars.database_api import log
+from vars.http_helper import (create_response, create_tcp_sock,
+                              is_authorized, parse_request)
 
 
 """
@@ -18,7 +19,7 @@ from vars.http_helper import (is_authorized, create_response, create_tcp_sock, g
 """
 def dispatch_connection(client_sock, client_addr):
     ##################################
-    ##### RECEIVE CLIENT REQUEST #####
+    #     RECEIVE CLIENT REQUEST     #
     ##################################
     # file_request = <command> <request_uri> <http_version>
     while True:
@@ -33,27 +34,26 @@ def dispatch_connection(client_sock, client_addr):
 
         if not client_request:
             # If client_request is blank, nothing sent, client closed connection
-            print("Terminating connection with address " + str(client_addr))
             break
         else:
-            # TODO: enter request into database
             client_command, filepath, version, headers = parse_request(client_request)
+            threading.Thread(target=log, args=(client_addr[0], client_addr[1], client_request[0])).start()
 
-        #############################################
-        ##### CREATE HTTP RESPONSE AND GET DATA #####
-        #############################################
+        #######################################################################
+        #                        HTTP RESPONSE CREATION                       #
+        #######################################################################
         if client_command is None and filepath is None and version is None and headers is None:
-            # Client request has error --> 400 Bad Request
+            # 400 Bad Request   -->     Client request has error
             response, response_data = create_response(400, client_command, filepath, headers)
         elif version != HTTP_VERSION:
-            # HTTP Version invalid, send 505 HTTP Version Not Supported
+            # 505 HTTP Version Not Supported    -->     HTTP Version invalid
             response, response_data = create_response(505, client_command, filepath, headers)
         elif client_command not in VALID_REQUESTS:
             if client_command not in INVALID_REQUESTS:
-                # Command not recognized, send 501 Not Implemented
+                # 501 Not Implemented   -->     Command not recognized
                 response, response_data = create_response(501, client_command, filepath, headers)
             else:
-                # Command is invalid, send 405 Not Allowed
+                # 405 Not Allowed   -->     Command is invalid
                 response, response_data = create_response(405, client_command, filepath, headers)
 
         elif filepath is not None:
@@ -63,25 +63,24 @@ def dispatch_connection(client_sock, client_addr):
             if readable:
                 authorized = filepath not in NEEDS_AUTHORIZATION or is_authorized(headers)
                 if not authorized:
-                    # The client is not authorized to view the file at 'filename' --> send 401 Unauthorized
+                    # 401 Unauthorized      -->     Client is unauthorized to view file, can view with authorizatiom
                     response, response_data = create_response(401, client_command, filepath, headers)
                 else:
-                    # File has correct permissions --> send 200 OK and file data
+                    # 200 OK    -->     File exists and user is authorized to read it
                     file_size = os.stat(filepath).st_size
                     response, response_data = create_response(200, client_command, filepath, headers, file_size)
             else:
-                # File does NOT have correct permissions --> send 403 Forbidden
+                # 403 Forbidden    -->     Client cannnot view file even with authorization
                 response, response_data = create_response(403, client_command, filepath, headers)
         else:
-            # File is not present in 'http_root' folder --> send 404
+            # 404 Not Found     -->     Requested file does not exist
             response, response_data = create_response(404, client_command, filepath, headers)
+        #######################################################################
 
         client_sock.send(response.encode())
-
         if client_command != "HEAD":
             # 'HEAD' only sends headers, not data
             client_sock.send(response_data if type(response_data) is bytes else response_data.encode())
-
         if headers and "Connection: close" in headers:
             # Last file requested
             break
@@ -91,17 +90,15 @@ def dispatch_connection(client_sock, client_addr):
 
 
                                         ##########################
-                                        ########## MAIN ##########
+                                        #          MAIN          #
                                         ##########################
 def main(args):
-    args.append("127.0.0.1")
-    args.append(12345)
-
-    if len(args) != 3:
+    if len(args) != 2:
         print(HELP)
     else:
         print(GREETING)
-        server_sock, context = create_tcp_sock(args[1], int(args[2]))     # Creates server socket with IP and PORT specified in arguments
+        #                                       IP          PORT
+        server_sock, context = create_tcp_sock(args[0], int(args[1]))
 
         # Infinite loop makes sure server doesn't terminate after accepting a connection
         while True:
@@ -113,12 +110,13 @@ def main(args):
                 threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
             except ssl.SSLError as e:
                 print(f"SSL ERROR: {e}")
-            except OSError as e:
-                print(f"SOCKET TIMEOUT: {e}")
+            except Exception as e:
+                print(f"ERROR: {e}")
                 if client_sock:
                     print(f"Client socket {client_addr} closed...")
                     client_sock.close()
                     break
+                
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main(sys.argv[1:])

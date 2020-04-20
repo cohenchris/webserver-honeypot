@@ -1,5 +1,5 @@
 import ssl
-from os import walk, path, getcwd
+from os import walk, path, getcwd, listdir
 from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
 import subprocess
 from .constants import (AUTH_FILE, CODES, HTTP_VERSION, MAX_REQUEST, MAX_SIZE, ROOT,
@@ -20,24 +20,32 @@ def is_authorized(headers):
         server_auth = auth.readline().strip()
 
     return server_auth == client_auth
+
+
 """
     Parses incoming client request from the socket and returns necessary information
 """
 def parse_request(client_request):
-    try:
-        file_request = client_request[0].split()
-        client_command = file_request[0]                      # COMMAND
-        client_request_uri = file_request[1].split('/')[1]    # REQUEST_URI
-        if client_request_uri == "":                          # / --> /index.html for HTTP servers
-            client_request_uri = "index.html"
-        filepath = get_filepath(client_request_uri)
-        version = file_request[2]
-        headers = client_request[1:]
+    #try:
+    file_request = client_request[0].split()
+    client_command = file_request[0]                      # COMMAND
+    client_request_uri = file_request[1].split('/')[1]    # REQUEST_URI
+    if client_request_uri == "":                          # / --> /index.html for HTTP servers
+        client_request_uri = "htdocs/index.html"
+    if file_exists(client_request_uri):
+        filepath = "./" + ROOT + client_request_uri
+    else:
+        filepath = None
+    version = file_request[2]
+    headers = client_request[1:]
 
-        return client_command, filepath, version, headers
-    except:
-        # Something went wrong while parsing - 400 Error
-        return None, None, None, None
+    return client_command, filepath, version, headers
+
+    #except Exception as e:
+#
+   #     print(e)
+   #     # Something went wrong while parsing - 400 Error
+     #   return None, None, None, None
 
 
 """
@@ -65,13 +73,17 @@ def get_content_type(code, path):
 """
     Walks http_root directory and returns the filepath for the requested URI (or None if not present)
 """
-def get_filepath(uri):
+def file_exists(uri):
     if uri is None:
         return None
-    for root, dirs, files in walk(ROOT):
-        if uri in files:
-            return f"{root}/{uri}"
-    return None
+    print(uri)
+    print("checking directory " + ROOT + uri + " for " + uri)
+    try:
+        dir_files = listdir("./" + ROOT)
+    except Exception:
+        return False
+
+    return True if target in dir_files else False
 
 """
     Gets data in a readable format for the requested URI on the server
@@ -127,7 +139,7 @@ def create_response_html(code):
             <title>My Web Server</title>
         </head>
         <body>
-            <h1>{code} - {CODES[code][0]}</h1>
+            <h1>{code} {CODES[code][0]}</h1>
             <h2>{CODES[code][1]}</h2>
             <br/>
             <br/>

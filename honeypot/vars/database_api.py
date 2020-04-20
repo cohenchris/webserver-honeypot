@@ -41,7 +41,7 @@ def log(ip, port, request):
             VALUES {vals};
             """
     try:
-        print(query)
+        #print(query)
         cursor.execute(query)
         cursor.commit()
     except Exception as e:
@@ -52,27 +52,37 @@ def log(ip, port, request):
     Prints the entire log table
 """
 def print_table():
+    table = ""
     try:
         cursor = connect()
+        if cursor is None:
+            print("UNABLE TO CONNECT TO SQL SERVER")
+            return "UNABLE TO CONNECT TO SQL SERVER"
+
         cursor.execute("SELECT * from " + TABLE)
         row = cursor.fetchone()
-        print("--------------------------------- ENTIRE TABLE ----------------------------------")
-        print("| #\ttime\t\thostname\tip_addr\t\tport\treq\t\t|")
-        print("---------------------------------------------------------------------------------")
+        table += ("-"*50 + " SERVER LOGS " + "-"*50 + "\n")
+        table += "  " + "#".ljust(3) + "date".ljust(12) + "time".ljust(17) + "hostname".ljust(20) + "ip_addr".ljust(15) + "port".ljust(7) + "request\n"
+        table += ("-"*113 + "\n")
         while row:
-            print('  ', end='')
-            for val in range(len(row) - 1):
-                if val == 1:
-                    print(str(row[val]).split()[-1].split('.')[0], end='\t')
-                else:
-                    print(str(row[val]), end='\t')
-            print(row[-1], end='')
-            print('  ')
+            table += "  " + str(row[0]).ljust(3)       # entry number
+            curr_date = str(row[1]).split()[0]
+            curr_time = str(row[1]).split()[1]
+            table += curr_date.ljust(12)               # date
+            table += curr_time.ljust(17)               # time
+            table += str(row[2]).ljust(20)             # hostame
+            table += str(row[3]).ljust(15)             # ip
+            table += str(row[4]).ljust(7)              # port
+            table += str(row[5])                       # request
+
+            table += '  \n'
             row = cursor.fetchone()
-        print("---------------------------------------------------------------------------------")
+        table += ("-"*113 + "\n")
     except Exception as e:
-        print("ERROR: Unable to print table")
-        print("\t", e)
+        table += "ERROR: Unable to print table\n"
+        table += f"\t{e}"
+    print(table)
+
 
 """
     Creates a new SQL table with name TABLE on the database
@@ -99,6 +109,4 @@ def create_log_table():
         print("\t", e)
 
 if __name__ == "__main__":
-    #create_log_table()
-    log("8.8.8.8", 42069, "HTTP/1.1 GET /")
-    #print_table()
+    print_table()

@@ -35,6 +35,7 @@ def main():
     try:
         cursor = connect()
         if cursor is None:
+            print("UNABLE TO CONNECT TO SQL SERVER")
             return "UNABLE TO CONNECT TO SQL SERVER"
 
         cursor.execute("SELECT * from " + TABLE)
