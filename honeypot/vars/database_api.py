@@ -34,14 +34,12 @@ def connect():
 def log(ip, port, request):
     cursor = connect()
     username = get_username(ip)
-    #vals = f"('{username}', '{ip}', {port}, '{request}', '{filename}')" if username is not None else f"(NULL, '{ip}', {port}, '{request}', '{filename}')"
     vals = f"('{username}', '{ip}', {port}, '{request}')" if username is not None else f"(NULL, '{ip}', {port}, '{request}')"
     query = f"""
             INSERT INTO {TABLE} {COLUMNS}
             VALUES {vals};
             """
     try:
-        #print(query)
         cursor.execute(query)
         cursor.commit()
     except Exception as e:

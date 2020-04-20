@@ -1,10 +1,5 @@
-#!/usr/bin/python3
-# CGI-BIN for webserver
-import cgitb
-cgitb.enable()
-
-import pyodbc
 import sys
+import pyodbc
 
 TABLE = "logfile"
 COLUMNS = "(username, ip, port, request)"
@@ -16,12 +11,10 @@ COLUMNS = "(username, ip, port, request)"
 """
 def connect():
     # Set up server connection
-    connectString = 'Driver={ODBC Driver 17 for SQL Server};Server=tcp:cohenwebserver-logs.database.windows.net,1433;Database=webserver-logs;Uid=cohenchris;Pwd=ChRiS245;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
+    connectString = 'Driver={ODBC Driver 17 for SQL Server};Server=tcp:cohenwebserver-logs.database.windows.net,1433;Database=webserver-logs;Uid=cohenchris;Pwd=ChRiS245;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=10;'
     try:
         cnxn = pyodbc.connect(connectString)
-    except Exception as e:
-        print("ERROR: Unable to connect to SQL Server.")
-        print("\t", e)
+    except Exception:
         return None
 
     return cnxn.cursor()
@@ -35,8 +28,8 @@ def main():
     try:
         cursor = connect()
         if cursor is None:
-            print("UNABLE TO CONNECT TO SQL SERVER")
-            return "UNABLE TO CONNECT TO SQL SERVER"
+            print("504", end='')
+            return "504"
 
         cursor.execute("SELECT * from " + TABLE)
         row = cursor.fetchone()

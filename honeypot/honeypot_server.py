@@ -8,10 +8,11 @@ from socket import socket
 from stat import ST_SIZE
 
 from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
-                            MAX_REQUEST, NEEDS_AUTHORIZATION, VALID_REQUESTS)
+                            MAX_REQUEST, MAX_URI, NEEDS_AUTHORIZATION,
+                            VALID_REQUESTS)
 from vars.database_api import log
-from vars.http_helper import (create_response, create_tcp_sock,
-                              is_authorized, parse_request)
+from vars.http_helper import (create_response, create_tcp_sock, is_authorized,
+                              parse_request)
 
 
 """
@@ -21,72 +22,83 @@ def dispatch_connection(client_sock, client_addr):
     ##################################
     #     RECEIVE CLIENT REQUEST     #
     ##################################
-    # file_request = <command> <request_uri> <http_version>
-    while True:
+    try:
+        # file_request = <command> <request_uri> <http_version>
         # This infinite loop keeps handling requests until socket requested to close
+        while True:
+            # Extract client request header (going to -2 leaves out last /r/n)
+            try:
+                client_request = client_sock.recv(MAX_REQUEST).decode().split("\r\n")[:-2]
+            except Exception as e:
+                print(f"ERROR recv(): {e}")
+                break
 
-        # Extract client request header (going to -2 leaves out last /r/n)
-        try:
-            client_request = client_sock.recv(MAX_REQUEST).decode().split("\r\n")[:-2]
-        except Exception as e:
-            print(f"ERROR recv(): {e}")
-            break
-
-        if not client_request:
-            # If client_request is blank, nothing sent, client closed connection
-            break
-        else:
-            client_command, filepath, version, headers = parse_request(client_request)
-            threading.Thread(target=log, args=(client_addr[0], client_addr[1], client_request[0])).start()
-
-        #######################################################################
-        #                        HTTP RESPONSE CREATION                       #
-        #######################################################################
-        if client_command is None and filepath is None and version is None and headers is None:
-            # 400 Bad Request   -->     Client request has error
-            response, response_data = create_response(400, client_command, filepath, headers)
-        elif version != HTTP_VERSION:
-            # 505 HTTP Version Not Supported    -->     HTTP Version invalid
-            response, response_data = create_response(505, client_command, filepath, headers)
-        elif client_command not in VALID_REQUESTS:
-            if client_command not in INVALID_REQUESTS:
-                # 501 Not Implemented   -->     Command not recognized
-                response, response_data = create_response(501, client_command, filepath, headers)
+            if not client_request:
+                # If client_request is blank, nothing sent, client closed connection
+                break
             else:
-                # 405 Not Allowed   -->     Command is invalid
-                response, response_data = create_response(405, client_command, filepath, headers)
+                client_request_uri, client_command, filepath, version, headers = parse_request(client_request)
+                #threading.Thread(target=log, args=(client_addr[0], client_addr[1], client_request[0])).start()  # LOGGING
 
-        elif filepath is not None:
-            # Check if file has read permissions
-            readable = os.access(filepath, os.R_OK)
-
-            if readable:
-                authorized = filepath not in NEEDS_AUTHORIZATION or is_authorized(headers)
-                if not authorized:
-                    # 401 Unauthorized      -->     Client is unauthorized to view file, can view with authorizatiom
-                    response, response_data = create_response(401, client_command, filepath, headers)
+            #######################################################################
+            #                        HTTP RESPONSE CREATION                       #
+            #######################################################################
+            if client_command is None and filepath is None and version is None and headers is None:
+                # 400 Bad Request   -->     Client request has error
+                response, response_data = create_response(400, client_command, filepath, headers)
+            elif version != HTTP_VERSION:
+                # 505 HTTP Version Not Supported    -->     HTTP Version invalid
+                response, response_data = create_response(505, client_command, filepath, headers)
+            elif client_command not in VALID_REQUESTS:
+                if client_command not in INVALID_REQUESTS:
+                    # 501 Not Implemented   -->     Command not recognized
+                    response, response_data = create_response(501, client_command, filepath, headers)
                 else:
-                    # 200 OK    -->     File exists and user is authorized to read it
-                    file_size = os.stat(filepath).st_size
-                    response, response_data = create_response(200, client_command, filepath, headers, file_size)
+                    # 405 Not Allowed   -->     Command is invalid
+                    response, response_data = create_response(405, client_command, filepath, headers)
+            elif len(client_request_uri) > MAX_URI:
+                # 414 Request URI Too Large     -->     Request URI is greater than MAX_REQUEST
+                response, response_data = create_response(414, client_command, filepath, headers)
+            elif filepath is not None:
+                # Check if file has read permissions
+                readable = os.access(filepath, os.R_OK)
+                if readable:
+                    authorized = filepath not in NEEDS_AUTHORIZATION or is_authorized(headers)
+                    if not authorized:
+                        # 401 Unauthorized      -->     Client is unauthorized to view file, can view with authorizatiom
+                        response, response_data = create_response(401, client_command, filepath, headers)
+                    else:
+                        # 200 OK    -->     File exists and user is authorized to read it
+                        file_size = os.stat(filepath).st_size
+                        response, response_data = create_response(200, client_command, filepath, headers, file_size)
+                else:
+                    # 403 Forbidden    -->     Client cannnot view file even with authorization
+                    response, response_data = create_response(403, client_command, filepath, headers)
             else:
-                # 403 Forbidden    -->     Client cannnot view file even with authorization
-                response, response_data = create_response(403, client_command, filepath, headers)
-        else:
-            # 404 Not Found     -->     Requested file does not exist
-            response, response_data = create_response(404, client_command, filepath, headers)
-        #######################################################################
+                # 404 Not Found     -->     Requested file does not exist
+                response, response_data = create_response(404, client_command, filepath, headers)
+            #######################################################################
 
+            send_to_client(client_sock, client_command, response, response_data)
+            if headers and "Connection: close" in headers:
+                # Last file requested
+                break
+        print("Terminating connection with address " + str(client_addr))
+    except Exception as e:
+        response, response_data = create_response(500, None, None, None)
+        send_to_client(client_sock, None, response, response_data)
+        
+"""
+    Sends response + data to client_sock
+"""
+def send_to_client(client_sock, client_command, response, response_data):
+    try:
         client_sock.send(response.encode())
         if client_command != "HEAD":
             # 'HEAD' only sends headers, not data
             client_sock.send(response_data if type(response_data) is bytes else response_data.encode())
-        if headers and "Connection: close" in headers:
-            # Last file requested
-            break
-
-    print("Terminating connection with address " + str(client_addr))
-
+    except:
+        print("Client socket ({client_sock}) is no longer active")
 
 
                                         ##########################

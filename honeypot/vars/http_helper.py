@@ -1,9 +1,9 @@
 import ssl
-from os import walk, path, getcwd, listdir
-from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
 import subprocess
-from .constants import (AUTH_FILE, CODES, HTTP_VERSION, MAX_REQUEST, MAX_SIZE, ROOT,
-                        SSL_CERT, SSL_KEY)
+from os import getcwd, listdir, path, walk
+from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
+
+from .constants import AUTH_FILE, CODES, HTTP_VERSION, ROOT, SSL_CERT, SSL_KEY
 
 
 """
@@ -26,26 +26,27 @@ def is_authorized(headers):
     Parses incoming client request from the socket and returns necessary information
 """
 def parse_request(client_request):
-    #try:
-    file_request = client_request[0].split()
-    client_command = file_request[0]                      # COMMAND
-    client_request_uri = file_request[1].split('/')[1]    # REQUEST_URI
-    if client_request_uri == "":                          # / --> /index.html for HTTP servers
-        client_request_uri = "htdocs/index.html"
-    if file_exists(client_request_uri):
-        filepath = "./" + ROOT + client_request_uri
-    else:
-        filepath = None
-    version = file_request[2]
-    headers = client_request[1:]
+    try:
+        file_request = client_request[0].split()
+        client_command = file_request[0]                      # COMMAND
+        client_request_uri = file_request[1]                  # REQUEST_URI
+        if client_request_uri == "/" or client_request_uri == "/index.html":  # / --> /index.html for HTTP servers
+            client_request_uri = "htdocs/index.html"
+        if client_request_uri[-1] == "/":
+            client_request_uri = client_request_uri[:-1]      # If there's a trailing '/' (like for a directory listing), get rid of it
+        if file_exists(client_request_uri):
+            filepath = ROOT + client_request_uri
+        else:
+            filepath = None
+        version = file_request[2]
+        headers = client_request[1:]
 
-    return client_command, filepath, version, headers
+        return client_request_uri, client_command, filepath, version, headers
 
-    #except Exception as e:
-#
-   #     print(e)
-   #     # Something went wrong while parsing - 400 Error
-     #   return None, None, None, None
+    except Exception as e:
+        print(e)
+        # Something went wrong while parsing - 400 Error
+        return None, None, None, None
 
 
 """
@@ -76,10 +77,10 @@ def get_content_type(code, path):
 def file_exists(uri):
     if uri is None:
         return None
-    print(uri)
-    print("checking directory " + ROOT + uri + " for " + uri)
+    directory = ROOT + '/'.join(uri.split("/")[:-1])
+    target = uri.split("/")[-1]
     try:
-        dir_files = listdir("./" + ROOT)
+        dir_files = listdir(directory)
     except Exception:
         return False
 
@@ -90,7 +91,7 @@ def file_exists(uri):
 """
 def get_data(filepath, file_size, code):
         if file_size == 0:
-            return create_response_html(code)
+            return create_response_html(code), "text/html"
 
         # Open file and get data
         filetype, content_type = get_content_type(code, filepath)
@@ -101,10 +102,47 @@ def get_data(filepath, file_size, code):
         else:
             # File isn't an executable file - read as normal
             read_mode = "r" if content_type == "text/plain" else "rb"       # rb for images, r for text
-            with open(filepath, read_mode) as requested_file:
-                data = requested_file.read(file_size)
-        return data
+            try:
+                with open(filepath, read_mode) as requested_file:
+                    data = requested_file.read(file_size)
+            except IsADirectoryError as e:
+                # Requested filepath is a directory - print directory html!
+                data = get_directory_html(filepath)
+                content_type = "text/html"
+        return data, content_type
 
+"""
+    Prints html for a directory
+"""
+def get_directory_html(filepath):
+    edited_filepath = '/'.join(filepath.split("/")[1:])
+    files = listdir(filepath)
+    file_html = []
+    for file in files:
+        file_html.append(f'<tr><th/><td valign="top"><a href="{edited_filepath}/{file}">{file}</a></td></tr>')
+
+    file_html = "\n".join(file_html)
+
+    return f"""
+    <!DOCTYPE HTML PUBLIC>
+    <html>
+        <head>
+            <title>Index of {edited_filepath}</title>
+        </head>
+        <body>
+            <h1>Index of {edited_filepath}</h1>
+            <table>
+                <tr><th valign="top"></th><th>Name</th><th>Last modified</th><th>Size</th><th>Description</th>
+                <tr><th colspan="5"><hr></th></tr>
+                    {file_html}
+                <tr><th colspan="5"><hr></th></tr>
+            </table>
+            <p>
+                <a href="/htdocs/index.html">HOME</a>
+            </p>
+        </body>
+    </html>
+    """
 
 """
     Create HTTP response with following format:
@@ -114,8 +152,12 @@ def get_data(filepath, file_size, code):
     <response_data>
 """
 def create_response(code, command, filepath, response_headers, file_size=0):
-    filetype, content_type = get_content_type(code, filepath)                                 # Content type of msg to send
-    response_data = get_data(filepath, file_size, code)                             # Data to send
+    #filetype, content_type = get_content_type(code, filepath)                      # Content type of msg to send
+    response_data, content_type = get_data(filepath, file_size, code)               # Data to send
+    if response_data == "504".encode():
+        code = 504
+        file_size = 0                                                               # Set back to zero, otherwise it will return the contents of the script!
+        response_data, content_type = get_data(filepath, file_size, code)
     
     response = HTTP_VERSION + " " + str(code) + " " + CODES[code][0] + "\r\n"       # HTTP/1.1 <code> <reason_phrase>
     if code == 401:
@@ -123,7 +165,6 @@ def create_response(code, command, filepath, response_headers, file_size=0):
             response += 'WWW-Authenticate: Basic realm="ChrisCohen-Webserver"'
     response += "Content-Length: " + str(len(response_data)) + "\r\n"               # Content-Length: <len>
     response += f"Content-Type: {content_type}\r\n\r\n"                             # Content-Type: <type>
-    
     
     return response, response_data
 
@@ -150,6 +191,7 @@ def create_response_html(code):
 
 """
     Creates and binds a TCP socket that is listening for connections on the specified port number
+    Lots of help setting this up from 'https://speakerdeck.com/markush/ssl-all-the-things-pycon-nz-2016?slide=18'
 """
 def create_tcp_sock(host, port):
     server_sock = socket(AF_INET, SOCK_STREAM)                              # Creates a TCP socket ready for use
