@@ -1,8 +1,8 @@
 import ssl
 import subprocess
-from os import getcwd, listdir, path, walk
+from os import getcwd, listdir, path, walk, stat, path
 from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
-
+import time
 from .constants import AUTH_FILE, CODES, HTTP_VERSION, ROOT, SSL_CERT, SSL_KEY
 
 
@@ -35,7 +35,7 @@ def parse_request(client_request):
         if client_request_uri[-1] == "/":
             client_request_uri = client_request_uri[:-1]      # If there's a trailing '/' (like for a directory listing), get rid of it
         if file_exists(client_request_uri):
-            filepath = ROOT + client_request_uri
+            filepath = ROOT + "/" + client_request_uri
         else:
             filepath = None
         version = file_request[2]
@@ -46,7 +46,7 @@ def parse_request(client_request):
     except Exception as e:
         print(e)
         # Something went wrong while parsing - 400 Error
-        return None, None, None, None
+        return None, None, None, None, None
 
 
 """
@@ -59,8 +59,10 @@ def get_content_type(code, path):
     file_extension = path.split('.')[-1]
     if file_extension == "txt":
         filetype = "text/plain"
-    elif file_extension == "png" or file_extension == "jpg":
+    elif file_extension == "png" or file_extension == "jpg" or file_extension == "gif":
         filetype = "image/" + file_extension
+    elif file_extension == "svg" or file_extension == "xml":
+        filetype = "image/svg+xml"
     elif file_extension == "html":
         filetype = "text/html"
     elif file_extension == "py":
@@ -77,7 +79,7 @@ def get_content_type(code, path):
 def file_exists(uri):
     if uri is None:
         return None
-    directory = ROOT + '/'.join(uri.split("/")[:-1])
+    directory = '/'.join((ROOT + "/" + uri).split("/")[:-1])
     target = uri.split("/")[-1]
     try:
         dir_files = listdir(directory)
@@ -103,9 +105,12 @@ def get_data(filepath, file_size, code):
             # File isn't an executable file - read as normal
             read_mode = "r" if content_type == "text/plain" else "rb"       # rb for images, r for text
             try:
+                if filepath == ROOT + "/htdocs/index.html":
+                    filepath = ROOT
+                    raise IsADirectoryError
                 with open(filepath, read_mode) as requested_file:
                     data = requested_file.read(file_size)
-            except IsADirectoryError as e:
+            except IsADirectoryError:
                 # Requested filepath is a directory - print directory html!
                 data = get_directory_html(filepath)
                 content_type = "text/html"
@@ -115,11 +120,21 @@ def get_data(filepath, file_size, code):
     Prints html for a directory
 """
 def get_directory_html(filepath):
-    edited_filepath = '/'.join(filepath.split("/")[1:])
+    edited_filepath = ROOT + '/'.join(filepath.split("/")[1:])
+    html_filepath = edited_filepath.strip(ROOT)
+
+    html_filepath = html_filepath + "/"
     files = listdir(filepath)
     file_html = []
-    for file in files:
-        file_html.append(f'<tr><th/><td valign="top"><a href="{edited_filepath}/{file}">{file}</a></td></tr>')
+
+    for f in files:
+        dir_file = (edited_filepath + "/" + f).strip("/")
+        file_created = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(stat(dir_file).st_mtime))
+        file_size = str(stat(dir_file).st_size) + "B"
+        if path.isdir(dir_file):
+            f = f + "/"
+        file_html.append(f'<tr><td valign="top"></td><td><a href="{html_filepath}{f}">{f}</a></td><td align="right">{file_created}</td><td align="right">{file_size}</td></tr>'
+)
 
     file_html = "\n".join(file_html)
 
@@ -127,12 +142,12 @@ def get_directory_html(filepath):
     <!DOCTYPE HTML PUBLIC>
     <html>
         <head>
-            <title>Index of {edited_filepath}</title>
+            <title>Index of {html_filepath}</title>
         </head>
         <body>
-            <h1>Index of {edited_filepath}</h1>
+            <h1>Index of {html_filepath}</h1>
             <table>
-                <tr><th valign="top"></th><th>Name</th><th>Last modified</th><th>Size</th><th>Description</th>
+                <tr><th valign="top"></th><th>Name</th><th>Last modified</th><th>Size</th>
                 <tr><th colspan="5"><hr></th></tr>
                     {file_html}
                 <tr><th colspan="5"><hr></th></tr>

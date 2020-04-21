@@ -10,7 +10,7 @@ NEEDS_AUTHORIZATION = ["http_root/cgi-bin/print_logs.py"]
 
 SSL_CERT = "vars/cert.pem"
 SSL_KEY = "vars/key.pem"
-ROOT = "http_root/"
+ROOT = "http_root"
 
 GREETING = r"""
   _    _  ____  _   _ ________     _______   ____ _______ 
