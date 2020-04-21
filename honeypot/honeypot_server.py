@@ -8,11 +8,11 @@ from socket import socket
 from stat import ST_SIZE
 
 from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
-                            MAX_REQUEST, MAX_URI, NEEDS_AUTHORIZATION,
-                            VALID_REQUESTS)
+                            MAX_REQUEST, MAX_SIZE, MAX_URI,
+                            NEEDS_AUTHORIZATION, VALID_REQUESTS)
 from vars.database_api import log
-from vars.http_helper import (create_response, create_tcp_sock, is_authorized,
-                              parse_request)
+from vars.http_helper import (create_response, create_tcp_sock, get_size,
+                              is_authorized, parse_request)
 
 
 """
@@ -67,6 +67,9 @@ def dispatch_connection(client_sock, client_addr):
                 if not authorized:
                     # 401 Unauthorized      -->     Client is unauthorized to view file, can view with authorizatiom
                     response, response_data = create_response(401, client_command, filepath, headers)
+                elif get_size(filepath)[0] > MAX_SIZE:
+                    # 413 Request Entity Too Large      -->     Requested file is greater than MAX_SIZE bytes
+                    response, response_data = create_response(413, client_command, filepath, headers)
                 else:
                     # 200 OK    -->     File exists and user is authorized to read it
                     file_size = os.stat(filepath).st_size

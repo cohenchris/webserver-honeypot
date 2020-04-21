@@ -1,8 +1,10 @@
+import math
 import ssl
 import subprocess
-from os import getcwd, listdir, path, walk, stat, path
-from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
 import time
+from os import getcwd, listdir, path, stat, walk
+from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
+
 from .constants import AUTH_FILE, CODES, HTTP_VERSION, ROOT, SSL_CERT, SSL_KEY
 
 
@@ -31,11 +33,13 @@ def parse_request(client_request):
         client_command = file_request[0]                      # COMMAND
         client_request_uri = file_request[1]                  # REQUEST_URI
         if client_request_uri == "/" or client_request_uri == "/index.html":  # / --> /index.html for HTTP servers
-            client_request_uri = "htdocs/index.html"
+            client_request_uri = "/htdocs/index.html"
         if client_request_uri[-1] == "/":
             client_request_uri = client_request_uri[:-1]      # If there's a trailing '/' (like for a directory listing), get rid of it
-        if file_exists(client_request_uri):
-            filepath = ROOT + "/" + client_request_uri
+        if "%20" in client_request_uri:                       # Catches corner case for file with space in name - %20 used instead of space in URLs
+            client_request_uri = client_request_uri.replace("%20", " ")
+        if file_exists(ROOT + client_request_uri):
+            filepath = ROOT + client_request_uri
         else:
             filepath = None
         version = file_request[2]
@@ -52,7 +56,7 @@ def parse_request(client_request):
 """
     Gets the file extension for the requested file in the server
 """
-def get_content_type(code, path):
+def get_content_type(path, code=200):
     if code != 200:
         return None, "text/html"
 
@@ -79,7 +83,8 @@ def get_content_type(code, path):
 def file_exists(uri):
     if uri is None:
         return None
-    directory = '/'.join((ROOT + "/" + uri).split("/")[:-1])
+    directory = uri.strip("/")
+    directory = '/'.join((uri).split("/")[:-1])
     target = uri.split("/")[-1]
     try:
         dir_files = listdir(directory)
@@ -96,7 +101,7 @@ def get_data(filepath, file_size, code):
             return create_response_html(code), "text/html"
 
         # Open file and get data
-        filetype, content_type = get_content_type(code, filepath)
+        filetype, content_type = get_content_type(filepath, code)
         if filetype == "py":
             # File is executable - execute and return output
             cmd = "python3 " + path.join(getcwd(), filepath)
@@ -117,24 +122,59 @@ def get_data(filepath, file_size, code):
         return data, content_type
 
 """
+    Returns the path of some icon in http_root/icons - used for directory listing
+"""
+def get_file_icon(filepath):
+    content_type = str(get_content_type(filepath))
+    if path.isdir(filepath):
+        return "/icons/folder.gif"
+    elif "image" in content_type:
+        return "/icons/image.gif"
+    elif "text" in content_type:
+        return "/icons/text.gif"
+    else:
+        return "/icons/unknown.gif"
+
+
+"""
+    Gets size of a file and converts it into the largest reasonable unit
+"""
+def get_size(filepath):
+    sizes = ["B", "K", "M", "G"]
+    original_size = stat(filepath).st_size
+    size = original_size
+    count = 0
+    while size >= 1024 and count <= 3:
+        size /= 1024
+        count = count + 1
+    
+    return original_size, (str(math.trunc(size * 100) / 100)) + sizes[count]
+
+
+"""
     Prints html for a directory
 """
 def get_directory_html(filepath):
-    edited_filepath = ROOT + '/'.join(filepath.split("/")[1:])
-    html_filepath = edited_filepath.strip(ROOT)
-
-    html_filepath = html_filepath + "/"
+    html_filepath = filepath + "/"
+    if html_filepath.split("/")[0] == ROOT:
+        html_filepath = "/" + '/'.join(html_filepath.split("/")[1:])
     files = listdir(filepath)
     file_html = []
 
+    # Parent directory (if not at root)
+    if html_filepath != "/":
+        parent_dir = "/".join(html_filepath.split("/")[:-2])
+        if parent_dir == "":
+            parent_dir = "/"
+        file_html.append(f'<tr><td valign="top"><img src="/icons/back.gif"></td><td><a href="{parent_dir}">Parent Directory</a></td><td align="right"></td><td align="right"></td></tr>')
+
     for f in files:
-        dir_file = (edited_filepath + "/" + f).strip("/")
+        dir_file = (filepath + "/" + f).strip("/")
         file_created = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(stat(dir_file).st_mtime))
-        file_size = str(stat(dir_file).st_size) + "B"
+        file_size = get_size(dir_file)[1]
         if path.isdir(dir_file):
             f = f + "/"
-        file_html.append(f'<tr><td valign="top"></td><td><a href="{html_filepath}{f}">{f}</a></td><td align="right">{file_created}</td><td align="right">{file_size}</td></tr>'
-)
+        file_html.append(f'<tr><td valign="top"><img src={get_file_icon(dir_file)}></td><td><a href="{html_filepath}{f}">{f}</a></td><td align="right">{file_created}</td><td align="right">  {file_size}</td></tr>')
 
     file_html = "\n".join(file_html)
 
@@ -153,11 +193,12 @@ def get_directory_html(filepath):
                 <tr><th colspan="5"><hr></th></tr>
             </table>
             <p>
-                <a href="/htdocs/index.html">HOME</a>
+                <a href="/">HOME</a>
             </p>
         </body>
     </html>
     """
+
 
 """
     Create HTTP response with following format:
@@ -167,7 +208,6 @@ def get_directory_html(filepath):
     <response_data>
 """
 def create_response(code, command, filepath, response_headers, file_size=0):
-    #filetype, content_type = get_content_type(code, filepath)                      # Content type of msg to send
     response_data, content_type = get_data(filepath, file_size, code)               # Data to send
     if response_data == "504".encode():
         code = 504

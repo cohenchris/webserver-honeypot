@@ -1,12 +1,12 @@
 MAX_REQUEST = 1024
 MAX_URI = 256
-MAX_SIZE = 1000000          # Max file size is 1MB
+MAX_SIZE = 10485760          # Max file size is 10MB
 HTTP_VERSION = "HTTP/1.1"
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
 
 AUTH_FILE = "vars/auth.txt"
-NEEDS_AUTHORIZATION = ["http_root/cgi-bin/print_logs.py"]
+NEEDS_AUTHORIZATION = ["http_root/cgi-bin/server_logs.py"]
 
 SSL_CERT = "vars/cert.pem"
 SSL_KEY = "vars/key.pem"
@@ -30,7 +30,7 @@ AVAILABLE COMMANDS:
 - HEAD\
 """
 
-# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (11)
+# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (12)
 CODES = {                                                                                                  # -----------
         100: ('Continue', 'Request received, please continue'),                                            # 
         101: ('Switching Protocols', 'Switching to new protocol; obey Upgrade header'),                    # 
@@ -64,7 +64,7 @@ CODES = {                                                                       
         410: ('Gone', 'URI no longer exists and has been permanently removed.'),                           # 
         411: ('Length Required', 'Client must specify Content-Length.'),                                   # 
         412: ('Precondition Failed', 'Precondition in headers is false.'),                                 # 
-        413: ('Request Entity Too Large', 'Entity is too large.'),                                         # ????
+        413: ('Request Entity Too Large', 'Entity is too large.'),                                         #    413
         414: ('Request-URI Too Long', 'URI is too long.'),                                                 #    414
         415: ('Unsupported Media Type', 'Entity body in unsupported format.'),                             # 
         416: ('Requested Range Not Satisfiable', 'Cannot satisfy request range.'),                         # 
