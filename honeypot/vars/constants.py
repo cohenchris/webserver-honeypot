@@ -5,6 +5,7 @@ HTTP_VERSION = "HTTP/1.1"
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
 
+BLACKLIST = "vars/blacklist.txt"
 AUTH_FILE = "vars/auth.txt"
 NEEDS_AUTHORIZATION = ["http_root/cgi-bin/server_logs.py"]
 

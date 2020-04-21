@@ -18,10 +18,16 @@ def get_username(ip):
 """
 def connect():
     # Set up server connection
+    driver = "{ODBC Driver 17 for SQL Server}"
+    server = "tcp:cohenwebserver-logs.database.windows.net,1433"
+    db = "webserver-logs"
+    uid = "cohenchris"
+    pw = "ChRiS245"
+    extras = "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=10;"
     # AWS
     #connectString = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=cohen-webserver.cdvgeueymc21.us-east-2.rds.amazonaws.com,3306;DATABASE=cohen_webserver_logs;UID=admin;PWD=honeypot69;'
     # AZURE
-    connectString = 'Driver={ODBC Driver 17 for SQL Server};Server=tcp:cohenwebserver-logs.database.windows.net,1433;Database=webserver-logs;Uid=cohenchris;Pwd=ChRiS245;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=10;'
+    connectString = f'Driver={driver};Server={server};Database={db};Uid={uid};Pwd={pw};{extras}'
     try:
         cnxn = pyodbc.connect(connectString)
     except Exception as e:
@@ -110,6 +116,4 @@ def create_log_table():
         print("\t", e)
 
 if __name__ == "__main__":
-    create_log_table()
-    log("127.0.0.1", 42069, "HTTP 1.1 GET /")
     print_table()

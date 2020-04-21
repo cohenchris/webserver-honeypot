@@ -5,8 +5,20 @@ import time
 from os import getcwd, listdir, path, stat, walk
 from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
 
-from .constants import AUTH_FILE, CODES, HTTP_VERSION, ROOT, SSL_CERT, SSL_KEY
+from .constants import (AUTH_FILE, BLACKLIST, CODES, HTTP_VERSION, ROOT,
+                        SSL_CERT, SSL_KEY)
 
+
+"""
+    Checks /var/blacklist.txt to see if the given IP is present
+"""
+def is_blacklisted(ip):
+    print(ip)
+    with open(BLACKLIST, "r") as blacklist:
+        for line in blacklist:
+            if ip == line.strip():
+                return True
+    return False
 
 """
     Checks headers for request and determines if the client is authorized to view the file or not
