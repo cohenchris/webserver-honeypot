@@ -10,16 +10,17 @@ from stat import ST_SIZE
 from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
                             MAX_REQUEST, MAX_SIZE, MAX_URI,
                             NEEDS_AUTHORIZATION, VALID_REQUESTS)
-from vars.database_api import log
-from vars.http_helper import (create_response, create_tcp_sock, get_size,
-                              is_authorized, is_blacklisted, parse_request)
+from vars.database_api import connect, log
+from vars.http_helper import (create_response, create_tcp_sock, get_blacklist,
+                              get_size, is_authorized, parse_request)
+from vars.update_blacklist import update_blacklist
 
 LOG = True
 
 """
     Service socket connection
 """
-def dispatch_connection(client_sock, client_addr):
+def dispatch_connection(cursor, client_sock, client_addr):
     ##################################
     #     RECEIVE CLIENT REQUEST     #
     ##################################
@@ -119,19 +120,23 @@ def main(args):
         #                                       IP          PORT
         server_sock, context = create_tcp_sock(args[0], int(args[1]))
 
+        # Update blacklist based on server logs and get an array of the blacklisted IPs4
+        update_blacklist()
+        banned_ips = get_blacklist()
+
         # Infinite loop makes sure server doesn't terminate after accepting a connection
         while True:
             ssl_client_conn = None
             try:
                 client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
-                if is_blacklisted(client_addr[0]):
+                if client_addr[0] in banned_ips:                       # Disallow any banned IPs from connecting
                     if client_sock:
                         print(f"BLACKLISTED - Client socket {client_addr} closed...")
                         client_sock.close()
                 else:
                     ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
                     print(f"accepted connection with address {client_addr}")
-                    threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
+                    threading.Thread(target=dispatch_connection, args=(cursor, ssl_client_conn, client_addr)).start()
             except ssl.SSLError as e:
                 print(f"SSL ERROR: {e}")
             except Exception as e:

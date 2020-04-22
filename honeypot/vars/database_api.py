@@ -1,13 +1,12 @@
-import pyodbc
 import sys
+
+import pyodbc
+
+from constants import KNOWN_USERS
 
 TABLE = "logfile"
 COLUMNS = "(username, ip, port, request)"
 
-KNOWN_USERS = {
-    "127.0.0.1"     :   "localhost",
-    "73.103.85.242" :   "Chris Cohen"
-}
 
 def get_username(ip):
     return KNOWN_USERS[ip] if ip in KNOWN_USERS else None
@@ -42,6 +41,7 @@ def connect():
 """
 def log(ip, port, request):
     cursor = connect()
+
     username = get_username(ip)
     vals = f"('{username}', '{ip}', {port}, '{request}')" if username is not None else f"(NULL, '{ip}', {port}, '{request}')"
     query = f"""

@@ -12,13 +12,13 @@ from .constants import (AUTH_FILE, BLACKLIST, CODES, HTTP_VERSION, ROOT,
 """
     Checks /var/blacklist.txt to see if the given IP is present
 """
-def is_blacklisted(ip):
-    print(ip)
+def get_blacklist():
+    banned_ips = []
     with open(BLACKLIST, "r") as blacklist:
-        for line in blacklist:
-            if ip == line.strip():
-                return True
-    return False
+        [banned_ips.append(line.strip()) for line in blacklist]
+
+    return banned_ips
+
 
 """
     Checks headers for request and determines if the client is authorized to view the file or not

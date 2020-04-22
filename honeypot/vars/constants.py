@@ -5,7 +5,12 @@ HTTP_VERSION = "HTTP/1.1"
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
 
-BLACKLIST = "vars/blacklist.txt"
+BLACKLIST = "blacklist.txt"
+KNOWN_USERS = {
+    "127.0.0.1"     :   "localhost",
+    "73.103.85.242" :   "Chris Cohen"
+}
+
 AUTH_FILE = "vars/auth.txt"
 NEEDS_AUTHORIZATION = ["http_root/cgi-bin/server_logs.py"]
 
