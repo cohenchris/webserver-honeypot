@@ -20,12 +20,12 @@
 
 - Logging
   - Uses remote SQL database for later analysis
-  - Able to define trusted IPs in `vars/constants.py`
+  - Able to define trusted IPs in `vars/database_api.py`
 
 - Blacklisting
   - User-defined text file to add custom IPs (`vars/blacklist.txt`)
-  - Python script to scan the remote SQL database and blacklist IPs that have requested the same URI 10+ times in 5 seconds
-    - `vars/update_blacklist.py` Runs on server startup (or manually)
+  - Python script to scan the remote SQL database and blacklist IPs that have requested the same URI 10+ times in 3 seconds
+    - `vars/update_blacklist.py` should be run manually when needed
 
 - Lures attackers
   - Fake SSL server keys and RSA private keys located in the server

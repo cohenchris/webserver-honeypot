@@ -2,11 +2,13 @@ import sys
 
 import pyodbc
 
-from constants import KNOWN_USERS
-
 TABLE = "logfile"
 COLUMNS = "(username, ip, port, request)"
 
+KNOWN_USERS = {
+    "127.0.0.1"     :   "localhost",
+    "73.103.85.242" :   "Chris Cohen"
+}
 
 def get_username(ip):
     return KNOWN_USERS[ip] if ip in KNOWN_USERS else None
@@ -106,7 +108,7 @@ def create_log_table():
             username    varchar(30),
             ip          varchar(15) NOT NULL,
             port        int NOT NULL,
-            request     varchar(50) NOT NULL,
+            request     varchar(128) NOT NULL,
         );
         """
         )

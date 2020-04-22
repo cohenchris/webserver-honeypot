@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import numpy as np
-
 from constants import BLACKLIST
 from database_api import TABLE, connect
 
@@ -28,7 +27,7 @@ def analyze_blacklist(log_table):
         if j < len(log_table):
             time = datetime.strptime(log_table[j]["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
             secs = (time - start_time).total_seconds()
-        while secs <= 5 and j < len(log_table):
+        while secs <= 3 and j < len(log_table):
             candidates.append(log_table[j])
             j = j + 1
             if j < len(log_table):
@@ -56,12 +55,12 @@ def analyze_blacklist(log_table):
         split_arr = [subarr for subarr in split_arr if min(subarr, key=get_req) == max(subarr, key=get_req)]
         [blacklist.append(subarr[0]["ip"]) for subarr in split_arr if subarr[0]["ip"] not in blacklist]
 
-    with open(BLACKLIST, "r") as blist:
+    with open("blacklist.txt", "r") as blist:
         content = blist.readlines()
     content = [line.strip() for line in content]
     
     [blacklist.append(line) for line in content if line not in blacklist]
-    with open(BLACKLIST, "w") as blist:
+    with open("blacklist.txt", "w") as blist:
         [blist.write(ip + "\n") for ip in blacklist]
 
 

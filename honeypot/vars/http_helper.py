@@ -14,8 +14,8 @@ from .constants import (AUTH_FILE, BLACKLIST, CODES, HTTP_VERSION, ROOT,
 """
 def get_blacklist():
     banned_ips = []
-    with open(BLACKLIST, "r") as blacklist:
-        [banned_ips.append(line.strip()) for line in blacklist]
+    with open(BLACKLIST, "r") as blist:
+        [banned_ips.append(line.strip()) for line in blist]
 
     return banned_ips
 

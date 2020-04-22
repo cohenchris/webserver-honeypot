@@ -1,15 +1,11 @@
 MAX_REQUEST = 1024
-MAX_URI = 256
+MAX_URI = 128
 MAX_SIZE = 10485760          # Max file size is 10MB
 HTTP_VERSION = "HTTP/1.1"
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
 
-BLACKLIST = "blacklist.txt"
-KNOWN_USERS = {
-    "127.0.0.1"     :   "localhost",
-    "73.103.85.242" :   "Chris Cohen"
-}
+BLACKLIST = "vars/blacklist.txt"
 
 AUTH_FILE = "vars/auth.txt"
 NEEDS_AUTHORIZATION = ["http_root/cgi-bin/server_logs.py"]
