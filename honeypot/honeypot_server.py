@@ -36,6 +36,7 @@ def dispatch_connection(client_sock, client_addr):
 
             if not client_request:
                 # If client_request is blank, nothing sent, client closed connection
+                print(f"ERROR - client closed connection")
                 break
             else:
                 client_request_uri, client_command, filepath, version, headers = parse_request(client_request)
@@ -87,6 +88,7 @@ def dispatch_connection(client_sock, client_addr):
             send_to_client(client_sock, client_command, response, response_data)
             if headers and "Connection: close" in headers:
                 # Last file requested
+                print("Last file requested.")
                 break
         print("Terminating connection with address " + str(client_addr))
     except Exception as e:
