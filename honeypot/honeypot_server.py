@@ -134,18 +134,16 @@ def main(args):
                         print(f"BLACKLISTED - Client socket {client_addr} closed...")
                         client_sock.close()
                 else:
-                    print("wrapping")
                     ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
                     print(f"accepted connection with address {client_addr}")
                     threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
             except ssl.SSLError as e:
                 print(f"SSL ERROR: {e}")
             except Exception as e:
-                print(f"ERROR: {e}")
+                print(f"MISC ERROR: {e}")
                 if client_sock:
                     print(f"Client socket {client_addr} closed...")
                     client_sock.close()
-                    break
                 
                 
 
