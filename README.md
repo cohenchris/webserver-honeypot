@@ -2,6 +2,7 @@
 ## CS422 - Networks Final Project
 
 ### Requirements
+- Unix ODBC   `sudo apt-get install unixodbc unixodbc-dev freetds-dev tdsodbc`
 - PYODBC      `pip3 install --user pyodbc`
 
 - [Microsoft ODBC Driver 17 for MySQL](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-2017#ubuntu17)
