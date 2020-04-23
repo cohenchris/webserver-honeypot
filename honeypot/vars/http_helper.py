@@ -270,7 +270,7 @@ def create_tcp_sock(host, port):
     # SSL
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     context.load_cert_chain(certfile=SSL_CERT, keyfile=SSL_KEY)
-    context.set_ciphers('EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH')
+    #context.set_ciphers('EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH')
 
     print(f"Listening on {host}:{port}...")
     return server_sock, context
