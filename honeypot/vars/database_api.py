@@ -7,7 +7,7 @@ COLUMNS = "(username, ip, port, request)"
 
 KNOWN_USERS = {
     "127.0.0.1"     :   "localhost",
-    "73.103.85.242" :   "Chris Cohen"
+    "73.103.81.134" :   "Chris Cohen"
 }
 
 def get_username(ip):
@@ -20,17 +20,13 @@ def get_username(ip):
 def connect():
     # Set up server connection
     ODBCdriver = "{ODBC Driver 17 for SQL Server}"
-    TDSdriver = "{FreeTDS}"
     server = "tcp:cohenwebserver-logs.database.windows.net,1433"
     db = "webserver-logs"
     uid = "cohenchris"
     pw = "ChRiS245"
     extras = "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=10;"
     # AZURE
-    #connectString = f'Driver={ODBCdriver};Server={server};Database={db};Uid={uid};Pwd={pw};{extras}'
-
-    # For Raspberry Pi - FreeTSD
-    connectString = f'Driver={TDSdriver};Server={server};database={db};Uid={uid};Pwd={pw}'
+    connectString = f'Driver={ODBCdriver};Server={server};Database={db};Uid={uid};Pwd={pw};{extras}'
     try:
         cnxn = pyodbc.connect(connectString)
     except Exception as e:

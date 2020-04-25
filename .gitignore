@@ -1,0 +1,2 @@
+# Exclude all key files for security
+*.pem

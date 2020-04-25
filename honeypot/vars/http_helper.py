@@ -10,17 +10,6 @@ from .constants import (AUTH_FILE, BLACKLIST, CODES, HTTP_VERSION, ROOT,
 
 
 """
-    Checks /var/blacklist.txt to see if the given IP is present
-"""
-def get_blacklist():
-    banned_ips = []
-    with open(BLACKLIST, "r") as blist:
-        [banned_ips.append(line.strip()) for line in blist]
-
-    return banned_ips
-
-
-"""
     Checks headers for request and determines if the client is authorized to view the file or not
 """
 def is_authorized(headers):
@@ -77,12 +66,16 @@ def get_content_type(path, code=200):
         filetype = "text/plain"
     elif file_extension == "png" or file_extension == "jpg" or file_extension == "gif":
         filetype = "image/" + file_extension
+    elif file_extension == "ico":
+        filetype = "image/x-icon"
     elif file_extension == "svg" or file_extension == "xml":
         filetype = "image/svg+xml"
     elif file_extension == "html":
         filetype = "text/html"
     elif file_extension == "py":
-        filetype = "text/plain"
+        filetype = "text/plain"     # usually would be 'application/x-python-code' , but we want the output to print to the browser
+    elif file_extension == "mp4":
+        filetype = "video/mp4"
     else:
         filetype = "text/plain"
 
@@ -90,7 +83,7 @@ def get_content_type(path, code=200):
 
 
 """
-    Walks http_root directory and returns the filepath for the requested URI (or None if not present)
+    Walks server_root directory and returns the filepath for the requested URI (or None if not present)
 """
 def file_exists(uri):
     if uri is None:
@@ -134,12 +127,17 @@ def get_data(filepath, file_size, code):
         return data, content_type
 
 """
-    Returns the path of some icon in http_root/icons - used for directory listing
+    Returns the path of some icon in server_root/icons - used for directory listing
+    Support for:    folder, README, video, image, text, unknown
 """
 def get_file_icon(filepath):
     content_type = str(get_content_type(filepath))
     if path.isdir(filepath):
         return "/icons/folder.gif"
+    elif "README" in filepath:
+        return "/icons/hand_right.gif"
+    elif "video" in content_type:
+        return "/icons/movie.gif"
     elif "image" in content_type:
         return "/icons/image.gif"
     elif "text" in content_type:
@@ -195,6 +193,7 @@ def get_directory_html(filepath):
     <html>
         <head>
             <title>Index of {html_filepath}</title>
+            <link rel="header icon" href="/icons/win98_icons/computer_taskmgr.ico">
         </head>
         <body>
             <h1>Index of {html_filepath}</h1>
@@ -205,7 +204,7 @@ def get_directory_html(filepath):
                 <tr><th colspan="5"><hr></th></tr>
             </table>
             <p>
-                <a href="/">HOME</a>
+                <a href="/"><img src="/icons/address_book_home.gif" style="width:20px;height:22px;"/></a>
             </p>
         </body>
     </html>

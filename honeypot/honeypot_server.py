@@ -7,12 +7,13 @@ from select import select
 from socket import socket
 from stat import ST_SIZE
 
+from vars.blacklist import get_blacklist, update_blacklist
 from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
                             MAX_REQUEST, MAX_SIZE, MAX_URI,
                             NEEDS_AUTHORIZATION, VALID_REQUESTS)
 from vars.database_api import connect, log
-from vars.http_helper import (create_response, create_tcp_sock, get_blacklist,
-                              get_size, is_authorized, parse_request)
+from vars.http_helper import (create_response, create_tcp_sock, get_size,
+                              is_authorized, parse_request)
 
 LOG = True
 
@@ -107,7 +108,7 @@ def send_to_client(client_sock, client_command, response, response_data):
             # 'HEAD' only sends headers, not data
             client_sock.send(response_data if type(response_data) is bytes else response_data.encode())
     except:
-        print("Client socket ({client_sock}) is no longer active")
+        print(f"Client socket ({client_sock}) is no longer active")
 
 
                                         ##########################
@@ -121,13 +122,14 @@ def main(args):
         #                                       IP          PORT
         server_sock, context = create_tcp_sock(args[0], int(args[1]))
 
-        # Get an array of the blacklisted IPs4
-        banned_ips = get_blacklist()
+        # Get an array of the blacklisted IPs4        
 
         # Infinite loop makes sure server doesn't terminate after accepting a connection
         while True:
             ssl_client_conn = None
             try:
+                update_blacklist()
+                banned_ips = get_blacklist()
                 client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
                 if client_addr[0] in banned_ips:                       # Disallow any banned IPs from connecting
                     if client_sock:

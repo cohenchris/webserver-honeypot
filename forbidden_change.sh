@@ -1,6 +1,6 @@
 #!/bin/bash
 
-forbidden="./honeypot/http_root/htdocs/forbidden.txt"
+forbidden="./honeypot/server_root/htdocs/forbidden.txt"
 
 if [[ -r $forbidden ]]; then
   chmod -r $forbidden
