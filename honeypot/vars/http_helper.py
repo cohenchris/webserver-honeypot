@@ -193,7 +193,7 @@ def get_directory_html(filepath):
     <html>
         <head>
             <title>Index of {html_filepath}</title>
-            <link rel="header icon" href="/icons/win98_icons/computer_taskmgr.ico">
+            <link rel="header icon" href="/icons/computer_taskmgr.ico">
         </head>
         <body>
             <h1>Index of {html_filepath}</h1>
