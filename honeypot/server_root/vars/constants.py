@@ -4,59 +4,39 @@ MAX_REQUEST = 1024
 MAX_URI = 128
 MAX_SIZE = 104857600          # Max file size is 100MB
 HTTP_VERSION = "HTTP/1.1"
-ROOT = "server_root"
+ROOT = ""
 
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
         ##############################
 
-        ##### DATABASE STUFF #####
-TABLE = "logfile"
-COLUMNS = "(username, ip, port, request)"
-BLACKLIST = "vars/blacklist.txt"
-DB_CONFIG = {
-        'user': 'chris',
-        'password': 'ChRiS245',
-        'host': '127.0.0.1',
-        'database': 'webserver_logs',
-        'auth_plugin': 'mysql_native_password'
-}
-
-KNOWN_USERS = {
-    "127.0.0.1"     :   "localhost",
-    "73.103.81.134" :   "Chris Cohen",
-    "192.168.1.21"  :   "Chris Cohen"
-}
-IGNORED_REQUESTS = ["/icons"]
-        ##########################
-
         ##### SECURITY STUFF #####
 AUTH_FILE = "vars/security/auth.txt"
-SSL_CERT = "vars/security/fullchain.pem"
-SSL_KEY = "vars/security/privkey.pem"
+SSL_CERT = "vars/security/cert.pem"
+SSL_KEY = "vars/security/key.pem"
 
-NEEDS_AUTHORIZATION = ["server_root/cgi-bin/server_logs.py"]
+NEEDS_AUTHORIZATION = ["cgi-bin/server_logs.py"]
         ##########################
 
 GREETING = r"""
-  _    _  ____  _   _ ________     _______   ____ _______ 
- | |  | |/ __ \| \ | |  ____\ \   / /  __ \ / __ \__   __|
- | |__| | |  | |  \| | |__   \ \_/ /| |__) | |  | | | |   
- |  __  | |  | | . ` |  __|   \   / |  ___/| |  | | | |   
- | |  | | |__| | |\  | |____   | |  | |    | |__| | | |   
- |_|  |_|\____/|_| \_|______|  |_|  |_|     \____/  |_|   
-                                                    
+   _____  _____ _  _ ___  ___   __          __  _        _____                          
+  / ____|/ ____| || |__ \|__ \  \ \        / / | |      / ____|                         
+ | |    | (___ | || |_ ) |  ) |  \ \  /\  / /__| |__   | (___   ___ _ ____   _____ _ __ 
+ | |     \___ \|__   _/ /  / /    \ \/  \/ / _ \ '_ \   \___ \ / _ \ '__\ \ / / _ \ '__|
+ | |____ ____) |  | |/ /_ / /_     \  /\  /  __/ |_) |  ____) |  __/ |   \ V /  __/ |   
+  \_____|_____/   |_|____|____|     \/  \/ \___|_.__/  |_____/ \___|_|    \_/ \___|_|   
+                                                                                                                                            
 """
 
 HELP = """\
-Usage:\tpython3.8 honeypot_server.py <IP> <PORT>
+Usage:\tpython3 myserver.py <IP> <PORT>
 
 AVAILABLE COMMANDS:
 - GET
 - HEAD\
 """
 
-# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (14)
+# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (13)
 CODES = {                                                                                                  # -----------
         100: ('Continue', 'Request received, please continue'),                                            # 
         101: ('Switching Protocols', 'Switching to new protocol; obey Upgrade header'),                    # 
@@ -81,7 +61,6 @@ CODES = {                                                                       
         401: ('Unauthorized', 'No permission -- see authorization schemes'),                               #    401
         402: ('Payment Required', 'No payment -- see charging schemes'),                                   # 
         403: ('Forbidden', 'Request forbidden -- authorization will not help'),                            #    403
-        403.6: ('Forbidden', 'IP address rejected'),                                                        #    403.6
         404: ('Not Found', 'The requested resource is not available.'),                                    #    404
         405: ('Method Not Allowed', 'Specified method is invalid for this resource.'),                     #    405
         406: ('Not Acceptable', 'URI not available in preferred format.'),                                 # 
