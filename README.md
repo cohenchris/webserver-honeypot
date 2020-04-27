@@ -34,9 +34,9 @@
 - HTTPS Server with SSL certificate verified by [**Let's Encrypt**](https://letsencrypt.org/)
 
 - Full-fledged directory browsing
-  - Put all files in server_root/htdocs
-  - Put all icons in server_root/icons
-  - Put all scripts in server_root/cgi-bin
+  - Put all files in `server_root/htdocs`
+  - Put all icons in `server_root/icons`
+  - Put all scripts in `server_root/cgi-bin`
 
 - Supported file extensions
   - *.txt  *.png  *.jpg  *.gif  *.ico  *.svg  *.xml  *.html  *.py  *.mp4
