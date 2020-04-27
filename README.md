@@ -8,7 +8,7 @@
 
 ## Setup
 
-1. Re-route HTTP and HTTPSrequests to the server's listening port (default is 8080)
+1. Re-route HTTP and HTTPS requests to the server's listening port (default is 8080)
   * Re-route incoming port 80 requests (HTTP) to port 8080 (the server's listening port)
     * `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
   * Re-route incoming port 443 requests (HTTPS) to port 8080 (the server's listening port)
@@ -37,16 +37,17 @@ openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem 
   - 200, 301, 400, 401, 403, 403.6, 404, 405, 413, 414, 500, 501, 504, 505
 
 - Logging
-  - Uses remote SQL database for later analysis
+  - Uses MySQL database for later analysis
   - Able to define trusted IPs in `vars/database_api.py`
 
 - Blacklisting
-  - User-defined text file to add custom IPs (`vars/blacklist.txt`)
-  - Python script to scan the remote SQL database and blacklist IPs that have requested the same URI 10+ times in 3 seconds
-    - `vars/update_blacklist.py` is run automatically
+  - User-editable text file to add custom IPs to ban (`vars/blacklist.txt`)
+  - Python script scans the MySQL database and blacklist IPs that have requested the same URI 10+ times in 3 seconds
+    - `vars/update_blacklist.py` runs and will ban IPs automatically
   - HTTP Response Code **403.6** used for telling client that IP has been banned
 
 - Lures attackers
-  - Fake SSL server keys and certificates located in the server
-  - Fake README.md, python webserver, keys, and server icons files in root directory
+  - Fake SSL server keys and certificates located in the server root directory
+    - Looks like a vulnerability to attackers
+  - Fake Python webserver and README.md located in the server root directory
     - Makes it look like the web server is inadvertently serving the parent directory of the root
