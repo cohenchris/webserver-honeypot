@@ -38,9 +38,9 @@ IGNORED_REQUESTS = ["/icons"]           # Hacky fix to eliminate the excessive r
         ##########################
 
         ##### SECURITY STUFF #####
-AUTH_FILE = "vars/security/auth.txt"
-SSL_CERT = "vars/security/fullchain.pem"
-SSL_KEY = "vars/security/privkey.pem"
+AUTH_FILE = "vars/keys/auth.txt"
+SSL_CERT = "vars/keys/fullchain.pem"
+SSL_KEY = "vars/keys/privkey.pem"
 
 NEEDS_AUTHORIZATION = ["server_root/cgi-bin/server_logs.py"]
         ##########################
