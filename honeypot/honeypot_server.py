@@ -32,9 +32,8 @@ def dispatch_connection(client_sock, client_addr):
             try:
                 client_request = client_sock.recv(MAX_REQUEST).decode().split("\r\n")[:-2]
             except Exception as e:
-                print(f"ERROR recv(): {e}")
+                print(f"RECV(): {e}")
                 break
-
 
             if not client_request:
                 # If client_request is blank, nothing sent, client closed connection
@@ -149,12 +148,15 @@ def main(args):
                         send_to_client(client_sock, client_addr, None, response, response_data)
                         print(f"BLACKLISTED - Client socket {client_addr} barred from connecting...")
                 else:
-                    #ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
+                    ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
                     print(f"accepted HTTPS connection with address {client_addr}")
-                    threading.Thread(target=dispatch_connection, args=(client_sock, client_addr)).start()
+                    threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
             except ssl.SSLError as e:
-                    print(f"accepted HTTP connection with address {client_addr}")
-                    threading.Thread(target=dispatch_connection, args=(client_sock, client_addr)).start()
+                print(f"SSLError: {e}")
+                # 301 Moved Permanently - HTTP Connection Received
+                client_sock, client_addr = server_sock.accept()        # If it messes up, need to re-accept connection
+                response, response_data = create_response(301, None, None, None)
+                send_to_client(client_sock, client_addr, None, response, response_data)
             except Exception as e:
                 print(f"MISC ERROR: {e}")
                 if client_sock:

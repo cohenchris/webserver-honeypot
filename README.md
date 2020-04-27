@@ -26,8 +26,8 @@
 - Supported file extensions
   - *.txt  *.png  *.jpg  *.gif  *.ico  *.svg  *.xml  *.html  *.py  *.mp4
 
-- Support for 13 HTTP response codes
-  - 200, 400, 401, 403, 403.6, 404, 405, 413, 414, 500, 501, 504, 505
+- Support for 14 HTTP response codes
+  - 200, 301, 400, 401, 403, 403.6, 404, 405, 413, 414, 500, 501, 504, 505
 
 - Logging
   - Uses remote SQL database for later analysis
@@ -42,3 +42,4 @@
 - Lures attackers
   - Fake SSL server keys and RSA private keys located in the server
   - Fake README.md, keys, and icons files in root directory makes it look like the web server is inadvertently serving the parent directory of the root
+  - Fake python web server that makes it look like it's running the server

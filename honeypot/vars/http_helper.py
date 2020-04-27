@@ -6,7 +6,7 @@ from os import getcwd, listdir, path, stat, walk
 from socket import AF_INET, SO_REUSEADDR, SOCK_STREAM, SOL_SOCKET, socket
 
 from .constants import (AUTH_FILE, BLACKLIST, CODES, HTTP_VERSION, ROOT,
-                        SSL_CERT, SSL_KEY)
+                        SSL_CERT, SSL_KEY, WEBSITE_URL)
 
 
 """
@@ -225,9 +225,13 @@ def create_response(code, command, filepath, response_headers, file_size=0):
         response_data, content_type = get_data(filepath, file_size, code)
     
     response = HTTP_VERSION + " " + str(code) + " " + CODES[code][0] + "\r\n"       # HTTP/1.1 <code> <reason_phrase>
-    if code == 401:
-            # 401 Unauthorized response must include Authorization Header
-            response += 'WWW-Authenticate: Basic realm="ChrisCohen-Webserver"'
+    if code == 301:
+        # 301 Moved Permanently is used to redirect HTTP Requests to HTTPS domain
+        response += f"Location: {WEBSITE_URL}\r\n"
+    elif code == 401:
+        # 401 Unauthorized response must include Authorization Header
+        response += 'WWW-Authenticate: Basic realm="ChrisCohen-Webserver"\r\n'
+
     response += "Content-Length: " + str(len(response_data)) + "\r\n"               # Content-Length: <len>
     response += f"Content-Type: {content_type}\r\n\r\n"                             # Content-Type: <type>
     

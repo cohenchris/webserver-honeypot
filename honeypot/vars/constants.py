@@ -1,4 +1,5 @@
         ##### BASIC SERVER STUFF #####
+WEBSITE_URL = "https://webserver.chriscohen.dev/"
 MAX_REQUEST = 1024
 MAX_URI = 128
 MAX_SIZE = 104857600          # Max file size is 100MB
@@ -55,7 +56,7 @@ AVAILABLE COMMANDS:
 - HEAD\
 """
 
-# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (13)
+# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (14)
 CODES = {                                                                                                  # -----------
         100: ('Continue', 'Request received, please continue'),                                            # 
         101: ('Switching Protocols', 'Switching to new protocol; obey Upgrade header'),                    # 
@@ -69,7 +70,7 @@ CODES = {                                                                       
         206: ('Partial Content', 'Partial content follows.'),                                              # 
 
         300: ('Multiple Choices', 'Object has several resources -- see URI list'),                         # 
-        301: ('Moved Permanently', 'Object moved permanently -- see URI list'),                            # 
+        301: ('Moved Permanently', 'Object moved permanently -- see URI list'),                            #    301
         302: ('Found', 'Object moved temporarily -- see URI list'),                                        # 
         303: ('See Other', 'Object moved -- see Method and URL list'),                                     # 
         304: ('Not Modified', 'Document has not changed since given time'),                                # 
