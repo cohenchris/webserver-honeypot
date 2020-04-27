@@ -19,6 +19,7 @@
     * PASSWORD to local MySQL Server
     * DATABSE name in local MySQL Server
     * WEBSITE URL to serve
+        * Change in both `vars/constants.py` and `server_root/vars/constants.py`
 ### Fake Web Server
 6. Copy over your website SSL keys, SSL certificate, and authentication file
     * Put full-chain certificate in `vars/keys/fullchain.pem`

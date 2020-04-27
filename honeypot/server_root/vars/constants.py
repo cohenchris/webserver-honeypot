@@ -1,5 +1,10 @@
+        ##### PERSONAL WEBSITE DETAILS #####
+WEBSITE_URL = ""
+        ####################################
+
+
+
         ##### BASIC SERVER STUFF #####
-WEBSITE_URL = "https://webserver.chriscohen.dev/"
 MAX_REQUEST = 1024
 MAX_URI = 128
 MAX_SIZE = 104857600          # Max file size is 100MB
@@ -11,9 +16,9 @@ INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PAT
         ##############################
 
         ##### SECURITY STUFF #####
-AUTH_FILE = "vars/security/auth.txt"
-SSL_CERT = "vars/security/cert.pem"
-SSL_KEY = "vars/security/key.pem"
+AUTH_FILE = "vars/keys/auth.txt"
+SSL_CERT = "vars/keys/cert.pem"
+SSL_KEY = "vars/keys/key.pem"
 
 NEEDS_AUTHORIZATION = []
         ##########################
