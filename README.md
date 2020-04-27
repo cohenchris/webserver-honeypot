@@ -23,7 +23,8 @@
 6. Copy over your website SSL keys, SSL certificate, and authentication file
     * Put full-chain certificate in `vars/security/fullchain.pem`
     * Put private key in `vars/security/privkey.pem`
-    * Put base64 encoded authentication string in the form of **user:password** in `vars/security/auth.txt`
+    * Put authentication string in the form of **user:password** in `vars/security/auth.txt`
+        * Encode this in base64
 7. Generate Self-Signed Certificate for Fake Web Server
     * execute in **honeypot/server_root/vars/keys**
     * `openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem; chmod 700 *.pem;`
