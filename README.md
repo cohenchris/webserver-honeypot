@@ -1,23 +1,20 @@
 # WEB SERVER HONEYPOT IN PYTHON
 ---
 
-## INSTALLATION
+## Installation
 
 1. Clone this repository
-2. Install dependencies:
-  * `pip3 install -r requirements.txt`
+2. Install dependencies: `pip3 install -r requirements.txt`
 
-## SETUP
+## Setup
 
-1. Re-route ports to your listening port (default is 8080)
+1. Re-route HTTP and HTTPSrequests to the server's listening port (default is 8080)
   * Re-route incoming port 80 requests (HTTP) to port 8080 (the server's listening port)
     * `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
   * Re-route incoming port 443 requests (HTTPS) to port 8080 (the server's listening port)
-    * `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
-  * **Delete these rules**
+    * `sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8080`
+  * **DELETE RULES**
     * `sudo iptables -t nat --line-numbers -n -L`
-
----
 
 ## Generate Self-Signed Certificate for Fake Web Server
 execute in **honeypot/server_root/vars/keys**
@@ -25,7 +22,7 @@ execute in **honeypot/server_root/vars/keys**
 openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem; chmod 700 *.pem
 ```
 
-### Features
+## Features
 - HTTPS Server with SSL certificate verified by **Let's Encrypt**
 
 - Full-fledged directory browsing
