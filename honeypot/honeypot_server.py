@@ -35,6 +35,7 @@ def dispatch_connection(client_sock, client_addr):
                 print(f"ERROR recv(): {e}")
                 break
 
+
             if not client_request:
                 # If client_request is blank, nothing sent, client closed connection
                 print(f"ERROR - client closed connection")
@@ -149,10 +150,11 @@ def main(args):
                         print(f"BLACKLISTED - Client socket {client_addr} barred from connecting...")
                 else:
                     #ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
-                    print(f"accepted connection with address {client_addr}")
+                    print(f"accepted HTTPS connection with address {client_addr}")
                     threading.Thread(target=dispatch_connection, args=(client_sock, client_addr)).start()
             except ssl.SSLError as e:
-                print(f"SSL ERROR: {e}")
+                    print(f"accepted HTTP connection with address {client_addr}")
+                    threading.Thread(target=dispatch_connection, args=(client_sock, client_addr)).start()
             except Exception as e:
                 print(f"MISC ERROR: {e}")
                 if client_sock:

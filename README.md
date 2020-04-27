@@ -6,8 +6,10 @@
 
 - Re-route incoming port 80 requests to port 8080 (the server's listening port)
   - `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
-  - Delete this rule
-    - `sudo iptables -t nat --line-numbers -n -L`
+- Re-route incoming port 443 requests to port 8080 (the server's listening port)
+  - `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
+- Delete these rules
+  - `sudo iptables -t nat --line-numbers -n -L`
 
 - execute in **honeypot/vars/** for a self-signed certificate:
 `openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem`

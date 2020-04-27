@@ -31,8 +31,8 @@ IGNORED_REQUESTS = ["/icons"]
 
         ##### SECURITY STUFF #####
 AUTH_FILE = "vars/security/auth.txt"
-SSL_CERT = "vars/security/cert.pem"
-SSL_KEY = "vars/security/key.pem"
+SSL_CERT = "vars/security/fullchain.pem"
+SSL_KEY = "vars/security/privkey.pem"
 
 NEEDS_AUTHORIZATION = ["server_root/cgi-bin/server_logs.py"]
         ##########################
