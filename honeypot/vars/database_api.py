@@ -57,3 +57,25 @@ def create_table():
     except Exception as e:
         print("ERROR: Unable to create table.")
         print("\t", e)
+
+"""
+    Deletes the SQL table with name TABLE on the database
+"""
+def delete_table():
+    cnxn = mysql.connector.connect(**DB_CONFIG)
+    cursor = cnxn.cursor()
+
+    try:
+        cursor.execute(f"DROP TABLE {TABLE}")
+        cursor.close()
+        cnxn.close()
+    except Exception as e:
+        print("ERROR: Unable to delete table.")
+        print("\t", e)
+
+
+if __name__ == "__main__":
+    if sys.argv[1] == "create":
+        create_table()
+    elif sys.argv[1] == "delete":
+        delete_table()
