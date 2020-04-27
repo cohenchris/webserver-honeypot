@@ -1,6 +1,5 @@
-# **HTTPS Web Server Honeypot**
+# **HTTPS WEB SERVER HONEYPOT**
 ---
-
 # Installation and Setup
 
 1. Clone this repository
