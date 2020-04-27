@@ -3,12 +3,12 @@
 
 ### Requirements
 - `pip3 install -r requirements.txt`
-
-- Re-route incoming port 80 requests to port 8080 (the server's listening port)
+#### Ports
+Re-route incoming port 80 requests to port 8080 (the server's listening port)
   - `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
-- Re-route incoming port 443 requests to port 8080 (the server's listening port)
+Re-route incoming port 443 requests to port 8080 (the server's listening port)
   - `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
-- Delete these rules
+**Delete these rules**
   - `sudo iptables -t nat --line-numbers -n -L`
 
 - execute in **honeypot/server_root/vars/keys** for a self-signed certificate (for fake web server):
