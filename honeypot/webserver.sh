@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sudo python3.7 honeypot_server.py 192.168.1.69 80
+python3.8 honeypot_server.py 192.168.1.69 8080

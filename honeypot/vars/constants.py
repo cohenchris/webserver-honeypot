@@ -1,17 +1,41 @@
+        ##### BASIC SERVER STUFF #####
 MAX_REQUEST = 1024
 MAX_URI = 128
 MAX_SIZE = 104857600          # Max file size is 100MB
 HTTP_VERSION = "HTTP/1.1"
+ROOT = "server_root"
+
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
+        ##############################
+
+        ##### DATABASE STUFF #####
+TABLE = "logfile"
+COLUMNS = "(username, ip, port, request)"
 BLACKLIST = "vars/blacklist.txt"
+DB_CONFIG = {
+        'user': 'chris',
+        'password': 'ChRiS245',
+        'host': '127.0.0.1',
+        'database': 'webserver_logs',
+        'auth_plugin': 'mysql_native_password'
+}
 
-AUTH_FILE = "vars/auth.txt"
+KNOWN_USERS = {
+    "127.0.0.1"     :   "localhost",
+    "73.103.81.134" :   "Chris Cohen",
+    "192.168.1.21"  :   "Chris Cohen"
+}
+IGNORED_REQUESTS = ["/icons"]
+        ##########################
+
+        ##### SECURITY STUFF #####
+AUTH_FILE = "vars/security/auth.txt"
+SSL_CERT = "vars/security/cert.pem"
+SSL_KEY = "vars/security/key.pem"
+
 NEEDS_AUTHORIZATION = ["server_root/cgi-bin/server_logs.py"]
-
-SSL_CERT = "vars/cert.pem"
-SSL_KEY = "vars/key.pem"
-ROOT = "server_root"
+        ##########################
 
 GREETING = r"""
   _    _  ____  _   _ ________     _______   ____ _______ 
@@ -31,7 +55,7 @@ AVAILABLE COMMANDS:
 - HEAD\
 """
 
-# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (12)
+# Credit goes to https://github.com/bocajspear1/honeyhttpd in the file 'honeyhttpd/servers/TestServer.py   # IMPLEMENTED (13)
 CODES = {                                                                                                  # -----------
         100: ('Continue', 'Request received, please continue'),                                            # 
         101: ('Switching Protocols', 'Switching to new protocol; obey Upgrade header'),                    # 
@@ -56,6 +80,7 @@ CODES = {                                                                       
         401: ('Unauthorized', 'No permission -- see authorization schemes'),                               #    401
         402: ('Payment Required', 'No payment -- see charging schemes'),                                   # 
         403: ('Forbidden', 'Request forbidden -- authorization will not help'),                            #    403
+        403.6: ('Forbidden', 'IP address rejected'),                                                        #    403.6
         404: ('Not Found', 'The requested resource is not available.'),                                    #    404
         405: ('Method Not Allowed', 'Specified method is invalid for this resource.'),                     #    405
         406: ('Not Acceptable', 'URI not available in preferred format.'),                                 # 

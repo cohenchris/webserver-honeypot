@@ -1,0 +1,7 @@
+dnspython==1.16.0
+fasteners==0.15
+monotonic==1.5
+mysql-connector-python==8.0.19
+mysqlclient==1.4.6
+protobuf==3.6.1
+six==1.14.0

@@ -11,7 +11,7 @@ from vars.blacklist import get_blacklist, update_blacklist
 from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
                             MAX_REQUEST, MAX_SIZE, MAX_URI,
                             NEEDS_AUTHORIZATION, VALID_REQUESTS)
-from vars.database_api import connect, log
+from vars.database_api import log
 from vars.http_helper import (create_response, create_tcp_sock, get_size,
                               is_authorized, parse_request)
 
@@ -47,7 +47,14 @@ def dispatch_connection(client_sock, client_addr):
             #######################################################################
             #                        HTTP RESPONSE CREATION                       #
             #######################################################################
-            if client_command is None and filepath is None and version is None and headers is None:
+            update_blacklist()
+            banned_ips = get_blacklist()
+            banned = False
+            if client_addr[0] in banned_ips:
+                # 403.6 IP Address Rejected     -->     IP Address is blacklisted
+                response, response_data = create_response(403.6, client_command, filepath, headers)
+                banned = True
+            elif client_command is None and filepath is None and version is None and headers is None:
                 # 400 Bad Request   -->     Client request has error
                 response, response_data = create_response(400, client_command, filepath, headers)
             elif version != HTTP_VERSION:
@@ -86,29 +93,33 @@ def dispatch_connection(client_sock, client_addr):
                 response, response_data = create_response(404, client_command, filepath, headers)
             #######################################################################
 
-            send_to_client(client_sock, client_command, response, response_data)
+            send_to_client(client_sock, client_addr, client_command, response, response_data)
             if headers and "Connection: close" in headers:
                 # Last file requested
-                print("Last file requested.")
                 break
+            if banned:
+                send_to_client(client_sock, client_addr, client_command, response, response_data)
+                break
+
         print("Terminating connection with address " + str(client_addr))
+        client_sock.close()
     except Exception as e:
         # 500 Internal Server Error     -->     The program crashed while dealing with the request
         response, response_data = create_response(500, None, None, None)
-        send_to_client(client_sock, None, response, response_data)
+        send_to_client(client_sock, client_addr, None, response, response_data)
 
 
 """
     Sends response + data to client_sock
 """
-def send_to_client(client_sock, client_command, response, response_data):
+def send_to_client(client_sock, client_addr, client_command, response, response_data):
     try:
         client_sock.send(response.encode())
         if client_command != "HEAD":
             # 'HEAD' only sends headers, not data
             client_sock.send(response_data if type(response_data) is bytes else response_data.encode())
     except:
-        print(f"Client socket ({client_sock}) is no longer active")
+        print(f"Client socket {client_addr} is no longer active")
 
 
                                         ##########################
@@ -122,23 +133,24 @@ def main(args):
         #                                       IP          PORT
         server_sock, context = create_tcp_sock(args[0], int(args[1]))
 
-        # Get an array of the blacklisted IPs4        
-
         # Infinite loop makes sure server doesn't terminate after accepting a connection
         while True:
             ssl_client_conn = None
             try:
+                client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
+
                 update_blacklist()
                 banned_ips = get_blacklist()
-                client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
                 if client_addr[0] in banned_ips:                       # Disallow any banned IPs from connecting
                     if client_sock:
-                        print(f"BLACKLISTED - Client socket {client_addr} closed...")
-                        client_sock.close()
+                        # 403.6 - IP Address Rejected
+                        response, response_data = create_response(403.6, None, None, None)
+                        send_to_client(client_sock, client_addr, None, response, response_data)
+                        print(f"BLACKLISTED - Client socket {client_addr} barred from connecting...")
                 else:
-                    ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
+                    #ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
                     print(f"accepted connection with address {client_addr}")
-                    threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
+                    threading.Thread(target=dispatch_connection, args=(client_sock, client_addr)).start()
             except ssl.SSLError as e:
                 print(f"SSL ERROR: {e}")
             except Exception as e:

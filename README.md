@@ -2,10 +2,12 @@
 ## CS422 - Networks Final Project
 
 ### Requirements
-- Unix ODBC   `sudo apt-get install unixodbc unixodbc-dev freetds-dev tdsodbc`
-- PYODBC      `pip3 install --user pyodbc`
+- `pip3 install -r requirements.txt`
 
-- [Microsoft ODBC Driver 17 for MySQL](https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-2017#ubuntu17)
+- Re-route incoming port 80 requests to port 8080 (the server's listening port)
+  - `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
+  - Delete this rule
+    - `sudo iptables -t nat --line-numbers -n -L`
 
 - execute in **honeypot/vars/** for a self-signed certificate:
 `openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem`
@@ -22,8 +24,8 @@
 - Supported file extensions
   - *.txt  *.png  *.jpg  *.gif  *.ico  *.svg  *.xml  *.html  *.py  *.mp4
 
-- Support for 12 HTTP response codes
-  - 200, 400, 401, 403, 404, 405, 413, 414, 500, 501, 504, 505
+- Support for 13 HTTP response codes
+  - 200, 400, 401, 403, 403.6, 404, 405, 413, 414, 500, 501, 504, 505
 
 - Logging
   - Uses remote SQL database for later analysis
@@ -32,7 +34,8 @@
 - Blacklisting
   - User-defined text file to add custom IPs (`vars/blacklist.txt`)
   - Python script to scan the remote SQL database and blacklist IPs that have requested the same URI 10+ times in 3 seconds
-    - `vars/update_blacklist.py` should be run manually when needed
+    - `vars/update_blacklist.py` is run automatically
+  - HTTP Response Code **403.6** used for telling client that IP has been banned
 
 - Lures attackers
   - Fake SSL server keys and RSA private keys located in the server
