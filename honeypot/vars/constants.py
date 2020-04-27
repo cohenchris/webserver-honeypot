@@ -81,7 +81,7 @@ CODES = {                                                                       
         401: ('Unauthorized', 'No permission -- see authorization schemes'),                               #    401
         402: ('Payment Required', 'No payment -- see charging schemes'),                                   # 
         403: ('Forbidden', 'Request forbidden -- authorization will not help'),                            #    403
-        403.6: ('Forbidden', 'IP address rejected'),                                                        #    403.6
+        403.6: ('Forbidden', 'IP address rejected'),                                                       #    403.6
         404: ('Not Found', 'The requested resource is not available.'),                                    #    404
         405: ('Method Not Allowed', 'Specified method is invalid for this resource.'),                     #    405
         406: ('Not Acceptable', 'URI not available in preferred format.'),                                 # 

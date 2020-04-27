@@ -16,7 +16,8 @@
 `chmod 700 *.pem`
 
 ### Features
-- SSL Server
+- HTTPS Server
+  - Verified by **Let's Encrypt**
 
 - Full-fledged directory browsing
   - Put all files in server_root/htdocs
@@ -40,6 +41,6 @@
   - HTTP Response Code **403.6** used for telling client that IP has been banned
 
 - Lures attackers
-  - Fake SSL server keys and RSA private keys located in the server
-  - Fake README.md, keys, and icons files in root directory makes it look like the web server is inadvertently serving the parent directory of the root
-  - Fake python web server that makes it look like it's running the server
+  - Fake SSL server keys and certificates located in the server
+  - Fake README.md, python webserver, keys, and server icons files in root directory
+    - Makes it look like the web server is inadvertently serving the parent directory of the root

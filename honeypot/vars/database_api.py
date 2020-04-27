@@ -2,7 +2,10 @@ import sys
 
 import mysql.connector
 
-from .constants import COLUMNS, DB_CONFIG, IGNORED_REQUESTS, KNOWN_USERS, TABLE
+try:
+    from .constants import COLUMNS, DB_CONFIG, IGNORED_REQUESTS, KNOWN_USERS, TABLE
+except:
+    from constants import COLUMNS, DB_CONFIG, IGNORED_REQUESTS, KNOWN_USERS, TABLE
 
 
 """
@@ -79,3 +82,9 @@ if __name__ == "__main__":
         create_table()
     elif sys.argv[1] == "delete":
         delete_table()
+    else:
+        print("""Usage: python3 database_api <option>
+        OPTIONS:
+        create  -  creates a new log table in the database
+        delete  -  deletes the log table in the database
+        """)

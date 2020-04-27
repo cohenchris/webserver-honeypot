@@ -47,14 +47,14 @@ def dispatch_connection(client_sock, client_addr):
             #######################################################################
             #                        HTTP RESPONSE CREATION                       #
             #######################################################################
-            update_blacklist()
+            threading.Thread(target=update_blacklist).start()       # Update blacklist every time
             banned_ips = get_blacklist()
             banned = False
             if client_addr[0] in banned_ips:
                 # 403.6 IP Address Rejected     -->     IP Address is blacklisted
                 response, response_data = create_response(403.6, client_command, filepath, headers)
                 banned = True
-            elif client_command is None and filepath is None and version is None and headers is None:
+            if client_command is None and filepath is None and version is None and headers is None:
                 # 400 Bad Request   -->     Client request has error
                 response, response_data = create_response(400, client_command, filepath, headers)
             elif version != HTTP_VERSION:
@@ -139,7 +139,7 @@ def main(args):
             try:
                 client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
 
-                update_blacklist()
+                threading.Thread(target=update_blacklist).start()       # Update blacklist every time
                 banned_ips = get_blacklist()
                 if client_addr[0] in banned_ips:                       # Disallow any banned IPs from connecting
                     if client_sock:
