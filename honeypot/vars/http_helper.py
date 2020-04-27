@@ -265,7 +265,6 @@ def create_response_html(code):
 def create_tcp_sock(host, port):
     server_sock = socket(AF_INET, SOCK_STREAM)                              # Creates a TCP socket ready for use
     server_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)                     # Makes used port immediately available after termination of server
-    #server_sock.settimeout(15)                                              # Makes socket raise SocketTimeout after 15 seconds of inactivity
     server_sock.bind((host, port))                                          # Binds the TCP socket for use from any address
     server_sock.listen(5)                                                   # Listens for connections on socket
 

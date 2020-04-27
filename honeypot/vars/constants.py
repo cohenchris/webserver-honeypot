@@ -1,5 +1,15 @@
+        ##### PERSONAL WEBSITE DETAILS #####
+USERNAME = ""
+PASSWORD = ""
+DATABASE = ""
+WEBSITE_URL = ""
+        ####################################
+
+
+
+
+
         ##### BASIC SERVER STUFF #####
-WEBSITE_URL = "https://webserver.chriscohen.dev/"
 MAX_REQUEST = 1024
 MAX_URI = 128
 MAX_SIZE = 104857600          # Max file size is 100MB
@@ -15,19 +25,16 @@ TABLE = "logfile"
 COLUMNS = "(username, ip, port, request)"
 BLACKLIST = "vars/blacklist.txt"
 DB_CONFIG = {
-        'user': 'chris',
-        'password': 'ChRiS245',
+        'user': '{USERNAME}',
+        'password': '{PASSWORD}',
         'host': '127.0.0.1',
-        'database': 'webserver_logs',
+        'database': '{DATABASE}}',
         'auth_plugin': 'mysql_native_password'
 }
-
 KNOWN_USERS = {
     "127.0.0.1"     :   "localhost",
-    "73.103.81.134" :   "Chris Cohen",
-    "192.168.1.21"  :   "Chris Cohen"
 }
-IGNORED_REQUESTS = ["/icons"]
+IGNORED_REQUESTS = ["/icons"]           # Hacky fix to eliminate the excessive requests logged for each of the displayed icons
         ##########################
 
         ##### SECURITY STUFF #####

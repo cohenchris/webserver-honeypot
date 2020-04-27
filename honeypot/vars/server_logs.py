@@ -15,7 +15,7 @@ def main():
         cursor = cnxn.cursor()
 
         if cursor is None:
-            print("504", end='')
+            print("504", end='')    # This is useful for honeypot_server.py to recognize that the MySQL server timed out
             return "504"
 
         cursor.execute("SELECT * from " + TABLE)
