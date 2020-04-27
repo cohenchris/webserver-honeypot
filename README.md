@@ -31,7 +31,7 @@
 
 # Features
 
-- HTTPS Server with SSL certificate verified by **Let's Encrypt**
+- HTTPS Server with SSL certificate verified by [**Let's Encrypt**](https://letsencrypt.org/)
 
 - Full-fledged directory browsing
   - Put all files in server_root/htdocs
