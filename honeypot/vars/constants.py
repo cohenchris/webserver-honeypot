@@ -28,7 +28,7 @@ DB_CONFIG = {
         'user': f'{USERNAME}',
         'password': f'{PASSWORD}',
         'host': '127.0.0.1',
-        'database': f'{DATABASE}}',
+        'database': f'{DATABASE}',
         'auth_plugin': 'mysql_native_password'
 }
 KNOWN_USERS = {
