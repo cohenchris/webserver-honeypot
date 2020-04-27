@@ -1,8 +1,8 @@
         ##### PERSONAL WEBSITE DETAILS #####
-USERNAME = ""
-PASSWORD = ""
-DATABASE = ""
-WEBSITE_URL = ""
+USERNAME = "chris"
+PASSWORD = "ChRiS245"
+DATABASE = "webserver_logs"
+WEBSITE_URL = "https://webserver.chriscohen.dev"
         ####################################
 
 

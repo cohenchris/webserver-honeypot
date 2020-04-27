@@ -78,13 +78,13 @@ def delete_table():
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "create":
-        create_table()
-    elif sys.argv[1] == "delete":
-        delete_table()
-    else:
+    if len(sys.argv) == 1:
         print("""Usage: python3 database_api <option>
         OPTIONS:
         create  -  creates a new log table in the database
         delete  -  deletes the log table in the database
         """)
+    elif sys.argv[1] == "create":
+        create_table()
+    elif sys.argv[1] == "delete":
+        delete_table()

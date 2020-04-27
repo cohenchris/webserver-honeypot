@@ -1,5 +1,5 @@
         ##### PERSONAL WEBSITE DETAILS #####
-WEBSITE_URL = ""
+WEBSITE_URL = "https://webserver.chriscohen.dev/"
         ####################################
 
 
