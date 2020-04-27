@@ -1,3 +1,4 @@
 # Exclude all key files for security
 *.pem
 __pycache__
+auth.txt
