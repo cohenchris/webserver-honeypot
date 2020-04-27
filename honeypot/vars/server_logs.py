@@ -22,10 +22,10 @@ def main():
 
         rows = cursor.fetchall()
         table += ("-"*50 + " SERVER LOGS " + "-"*50 + "\n")
-        table += "  " + "#".ljust(3) + "date".ljust(12) + "time".ljust(17) + "hostname".ljust(20) + "ip_addr".ljust(15) + "port".ljust(7) + "protocol".ljust(10) + "request\n"
+        table += "  " + "#".ljust(7) + "date".ljust(12) + "time".ljust(17) + "hostname".ljust(20) + "ip_addr".ljust(15) + "port".ljust(7) + "protocol".ljust(10) + "request\n"
         table += ("-"*113 + "\n")
         for row in rows:
-            table += "  " + str(row[0]).ljust(3)       # entry number
+            table += "  " + str(row[0]).ljust(7)       # entry number
             curr_date = str(row[1]).split()[0]
             curr_time = str(row[1]).split()[1]
             table += curr_date.ljust(12)               # date
