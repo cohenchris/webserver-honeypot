@@ -4,7 +4,7 @@ MAX_REQUEST = 1024
 MAX_URI = 128
 MAX_SIZE = 104857600          # Max file size is 100MB
 HTTP_VERSION = "HTTP/1.1"
-ROOT = ""
+ROOT = "htdocs"
 
 VALID_REQUESTS = ["GET", "HEAD"]
 INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PATCH"]
@@ -15,7 +15,7 @@ AUTH_FILE = "vars/security/auth.txt"
 SSL_CERT = "vars/security/cert.pem"
 SSL_KEY = "vars/security/key.pem"
 
-NEEDS_AUTHORIZATION = ["cgi-bin/server_logs.py"]
+NEEDS_AUTHORIZATION = []
         ##########################
 
 GREETING = r"""

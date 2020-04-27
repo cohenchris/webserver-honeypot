@@ -11,7 +11,7 @@
 - Delete these rules
   - `sudo iptables -t nat --line-numbers -n -L`
 
-- execute in **honeypot/vars/** for a self-signed certificate:
+- execute in **honeypot/server_root/vars/keys** for a self-signed certificate (for fake web server):
 `openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem`
 `chmod 700 *.pem`
 

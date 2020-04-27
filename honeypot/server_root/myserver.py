@@ -13,8 +13,6 @@ from vars.constants import (GREETING, HELP, HTTP_VERSION, INVALID_REQUESTS,
 from vars.http_helper import (create_response, create_tcp_sock, get_size,
                               is_authorized, parse_request)
 
-LOG = True
-
 """
     Service socket connection
 """
@@ -39,20 +37,11 @@ def dispatch_connection(client_sock, client_addr):
                 break
             else:
                 client_request_uri, client_command, filepath, version, headers = parse_request(client_request)
-                if LOG:
-                    threading.Thread(target=log, args=(client_addr[0], client_addr[1], client_request[0])).start()  # LOGGING
 
             #######################################################################
             #                        HTTP RESPONSE CREATION                       #
             #######################################################################
-            update_blacklist()
-            banned_ips = get_blacklist()
-            banned = False
-            if client_addr[0] in banned_ips:
-                # 403.6 IP Address Rejected     -->     IP Address is blacklisted
-                response, response_data = create_response(403.6, client_command, filepath, headers)
-                banned = True
-            elif client_command is None and filepath is None and version is None and headers is None:
+            if client_command is None and filepath is None and version is None and headers is None:
                 # 400 Bad Request   -->     Client request has error
                 response, response_data = create_response(400, client_command, filepath, headers)
             elif version != HTTP_VERSION:
@@ -95,9 +84,6 @@ def dispatch_connection(client_sock, client_addr):
             if headers and "Connection: close" in headers:
                 # Last file requested
                 break
-            if banned:
-                send_to_client(client_sock, client_addr, client_command, response, response_data)
-                break
 
         print("Terminating connection with address " + str(client_addr))
         client_sock.close()
@@ -137,9 +123,9 @@ def main(args):
             try:
                 client_sock, client_addr = server_sock.accept()        # Accepts incoming connection
 
-                #ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
+                ssl_client_conn = context.wrap_socket(client_sock, server_side=True)
                 print(f"accepted HTTPS connection with address {client_addr}")
-                threading.Thread(target=dispatch_connection, args=(client_sock, client_addr)).start()
+                threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
             except ssl.SSLError as e:
                 print(f"SSLError: {e}")
                 # 301 Moved Permanently - HTTP Connection Received

@@ -33,7 +33,7 @@ def parse_request(client_request):
         client_command = file_request[0]                      # COMMAND
         client_request_uri = file_request[1]                  # REQUEST_URI
         if client_request_uri == "/" or client_request_uri == "/index.html":  # / --> /index.html for HTTP servers
-            client_request_uri = "/htdocs/index.html"
+            client_request_uri = "/index.html"
         if client_request_uri[-1] == "/":
             client_request_uri = client_request_uri[:-1]      # If there's a trailing '/' (like for a directory listing), get rid of it
         if "%20" in client_request_uri:                       # Catches corner case for file with space in name - %20 used instead of space in URLs
@@ -72,7 +72,7 @@ def get_content_type(path, code=200):
     elif file_extension == "html":
         filetype = "text/html"
     elif file_extension == "py":
-        filetype = "text/plain"     # usually would be 'application/x-python-code' , but we want the output to print to the browser
+        filetype = "text/plain"     # usually would be 'application/x-python-code', but we want the output to print to the browser
     elif file_extension == "mp4":
         filetype = "video/mp4"
     else:
@@ -90,6 +90,7 @@ def file_exists(uri):
     directory = uri.strip("/")
     directory = '/'.join((uri).split("/")[:-1])
     target = uri.split("/")[-1]
+    print(f"LOOKING FOR {target} in {directory}")
     try:
         dir_files = listdir(directory)
     except Exception:
@@ -115,7 +116,7 @@ def get_data(filepath, file_size, code):
             # File isn't an executable file - read as normal
             read_mode = "r" if content_type == "text/plain" else "rb"       # rb for images, r for text
             try:
-                if filepath == ROOT + "/htdocs/index.html":
+                if filepath == ROOT + "/index.html":
                     filepath = ROOT
                     raise IsADirectoryError
                 with open(filepath, read_mode) as requested_file:
@@ -128,23 +129,23 @@ def get_data(filepath, file_size, code):
 
 
 """
-    Returns the path of some icon in server_root/icons - used for directory listing
+    Returns the path of some icon in /icons - used for directory listing
     Support for:    folder, README, video, image, text, unknown
 """
 def get_file_icon(filepath):
     content_type = str(get_content_type(filepath))
     if path.isdir(filepath):
-        return "/icons/folder.gif"
+        return "../icons/folder.gif"
     elif "README" in filepath:
-        return "/icons/hand_right.gif"
+        return "../icons/hand_right.gif"
     elif "video" in content_type:
-        return "/icons/movie.gif"
+        return "../icons/movie.gif"
     elif "image" in content_type:
-        return "/icons/image.gif"
+        return "../icons/image.gif"
     elif "text" in content_type:
-        return "/icons/text.gif"
+        return "../icons/text.gif"
     else:
-        return "/icons/unknown.gif"
+        return "../icons/unknown.gif"
 
 
 """
@@ -194,7 +195,6 @@ def get_directory_html(filepath):
     <html>
         <head>
             <title>Index of {html_filepath}</title>
-            <link rel="header icon" href="/icons/computer_taskmgr.ico">
         </head>
         <body>
             <h1>Index of {html_filepath}</h1>
@@ -248,7 +248,7 @@ def create_response_html(code):
     <!DOCTYPE HTML PUBLIC>
     <html>
         <head>
-            <title>My Web Server</title>
+            <title>Chris Cohen's Web Server</title>
         </head>
         <body>
             <h1>{code} {CODES[code][0]}</h1>
