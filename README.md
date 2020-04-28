@@ -21,6 +21,7 @@
     * USERNAME to local MySQL Server
     * PASSWORD to local MySQL Server
     * DATABSE name in local MySQL Server
+    * KNOWN USERS by ip and alias
     * WEBSITE URL to serve
         * Change in both `vars/constants.py` and `server_root/vars/constants.py`
 ### Fake Web Server
