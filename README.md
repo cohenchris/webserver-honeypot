@@ -16,23 +16,37 @@
       * `sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8080`
     * **DELETE RULES**
       * `sudo iptables -t nat --line-numbers -n -L`
+### Logging
+5. Create a local database for the server to log to
+
+`sudo mysql`
+
+```mysql
+mysql> CREATE USER '<<USERNAME>>'@'localhost' IDENTIFIED BY '<<PASSWORD>>';
+mysql> GRANT ALL PRIVILEGES ON * . * TO '<<USERNAME>>'@'localhost';
+mysql> FLUSH PRIVILEGES;
+mysql> CREATE DATABASE <<DATABASE NAME>>;
+```
 ### Personal Credentials
-5. Enter personal database and website details in `vars/constants.py`
+6. Enter personal database and website details in `vars/constants.py`
     * USERNAME to local MySQL Server
     * PASSWORD to local MySQL Server
     * DATABSE name in local MySQL Server
     * KNOWN USERS by ip and alias
     * WEBSITE URL to serve
         * Change in both `vars/constants.py` and `server_root/vars/constants.py`
+    * In `honeypot/vars/` --> `python3 database_api.py create` will create a logfile table in the database
 ### Fake Web Server
-6. Copy over your website SSL keys, SSL certificate, and authentication file
+7. Copy over your website SSL keys, SSL certificate, and authentication file
     * Put full-chain certificate in `vars/keys/fullchain.pem`
     * Put private key in `vars/keys/privkey.pem`
     * Put authentication string in the form of **user:password** in `vars/keys/auth.txt`
         * Encode this in base64
-7. Generate Self-Signed Certificate for Fake Web Server
+8. Generate Self-Signed Certificate for Fake Web Server
     * execute in **honeypot/server_root/vars/keys**
-    * `openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem; chmod 700 *.pem;`
+    ```bash
+    openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem; chmod 700 *.pem;
+    ```
 
 # Features
 
