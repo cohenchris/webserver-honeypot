@@ -3,6 +3,9 @@ USERNAME = ""
 PASSWORD = ""
 DATABASE = ""
 WEBSITE_URL = ""
+KNOWN_USERS = {
+    "127.0.0.1"     :   "localhost",
+}
         ####################################
 
 
@@ -30,9 +33,6 @@ DB_CONFIG = {
         'host': '127.0.0.1',
         'database': f'{DATABASE}',
         'auth_plugin': 'mysql_native_password'
-}
-KNOWN_USERS = {
-    "127.0.0.1"     :   "localhost",
 }
 IGNORED_REQUESTS = ["/icons"]           # Hacky fix to eliminate the excessive requests logged for each of the displayed icons
         ##########################
