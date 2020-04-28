@@ -1,7 +1,7 @@
 #!/bin/bash
 
 declare -a pkgs=(
-  python3.8
+  python3.8*
   python3-pip
   mysql-server
   libmariadbclient-dev
