@@ -7,9 +7,10 @@
 	* `pip3 install -r requirements.txt`
 	* `./install_dependencies.sh`
 	* `./forbidden_change.sh`
-### Ports
-3. Port Forward ports 80 and 443 on your local router
-4. Re-route HTTP and HTTPS requests to the server's listening port (default is 8080)
+### Ports and Networking
+3. Change <IP> to the desired IP to serve in `honeypot/start_webserver.sh`
+4. Port Forward ports 80 and 443 on your local router
+5. Re-route HTTP and HTTPS requests to the server's listening port (default is 8080)
     * Re-route incoming port 80 requests (HTTP) to port 8080 (the server's listening port)
       * `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080`
     * Re-route incoming port 443 requests (HTTPS) to port 8080 (the server's listening port)
@@ -17,7 +18,7 @@
     * **DELETE RULES**
       * `sudo iptables -t nat --line-numbers -n -L`
 ### Logging
-5. Create a local database for the server to log to
+6. Create a local database for the server to log to
 
 `sudo mysql`
 
@@ -28,7 +29,7 @@ mysql> FLUSH PRIVILEGES;
 mysql> CREATE DATABASE <<DATABASE NAME>>;
 ```
 ### Personal Credentials
-6. Enter personal database and website details in `vars/constants.py`
+7. Enter personal database and website details in `vars/constants.py`
     * USERNAME to local MySQL Server
     * PASSWORD to local MySQL Server
     * DATABSE name in local MySQL Server
@@ -37,12 +38,12 @@ mysql> CREATE DATABASE <<DATABASE NAME>>;
         * Change in both `vars/constants.py` and `server_root/vars/constants.py`
     * In `honeypot/vars/` --> `python3 database_api.py create` will create a logfile table in the database
 ### Fake Web Server
-7. Copy over your website SSL keys, SSL certificate, and authentication file
+8. Copy over your website SSL keys, SSL certificate, and authentication file
     * Put full-chain certificate in `vars/keys/fullchain.pem`
     * Put private key in `vars/keys/privkey.pem`
     * Put authentication string in the form of **user:password** in `vars/keys/auth.txt`
         * Encode this in base64
-8. Generate Self-Signed Certificate for Fake Web Server
+9. Generate Self-Signed Certificate for Fake Web Server
     * execute in **honeypot/server_root/vars/keys**
     ```bash
     openssl req -newkey rsa:4096 -nodes -sha512 -x509 -days 21 -nodes -out cert.pem -keyout key.pem; chmod 700 *.pem;
