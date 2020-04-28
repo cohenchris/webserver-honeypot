@@ -1,6 +1,6 @@
 #!/bin/bash
 
-forbidden="honeypot/server_root/htdocs/forbidden.txt"
+forbidden="../honeypot/server_root/htdocs/forbidden.txt"
 
 if [[ -r $forbidden ]]; then
   echo "changed"

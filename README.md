@@ -3,7 +3,11 @@
 # Installation and Setup
 
 1. Clone this repository
-2. Install dependencies: `pip3 install -r requirements.txt`
+2. Install dependencies:
+	* `cd setup/`
+	* `pip3 install -r requirements.txt`
+	* ./install_dependencies.sh
+	* ./forbidden_change.sh
 ### Ports
 3. Port Forward ports 80 and 443 on your local router
 4. Re-route HTTP and HTTPS requests to the server's listening port (default is 8080)
