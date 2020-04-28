@@ -8,10 +8,11 @@ sudo apt-get upgrade -y
 
 # Install package dependencies
 declare -a pkgs=(
-  python3.8*
+  python3.8-dev
+  python3.8
   python3-pip
-  mysql-server
-  libmariadbclient-dev
+  mysql-server*
+  mysql-client*
   virtualenv
 )
 for pkg in ${pkgs[@]}
