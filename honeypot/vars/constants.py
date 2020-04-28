@@ -1,8 +1,8 @@
         ##### PERSONAL WEBSITE DETAILS #####
-USERNAME = "chris"
-PASSWORD = "ChRiS245"
-DATABASE = "webserver_logs"
-WEBSITE_URL = "https://webserver.chriscohen.dev"
+USERNAME = ""
+PASSWORD = ""
+DATABASE = ""
+WEBSITE_URL = ""
         ####################################
 
 
@@ -33,8 +33,6 @@ DB_CONFIG = {
 }
 KNOWN_USERS = {
     "127.0.0.1"     :   "localhost",
-    "73.103.81.134" :   "admin",
-    "73.103.82.236" :   "admin"
 }
 IGNORED_REQUESTS = ["/icons"]           # Hacky fix to eliminate the excessive requests logged for each of the displayed icons
         ##########################
