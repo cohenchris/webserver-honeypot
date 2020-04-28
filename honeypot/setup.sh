@@ -91,6 +91,7 @@ echo
 read -p "Enter an IP to host this webserver: " ip
 echo "#!/bin/bash
 
+source honeyenv/bin/activate
 python3.8 honeypot_server.py $ip 8080" > ./start_webserver.sh
 chmod +x start_webserver.sh
 
