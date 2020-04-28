@@ -1,7 +1,6 @@
         ##### PERSONAL WEBSITE DETAILS #####
 USERNAME = ""
 PASSWORD = ""
-DATABASE = ""
 WEBSITE_URL = ""
 KNOWN_USERS = {
     "127.0.0.1"     :   "localhost",
@@ -24,6 +23,7 @@ INVALID_REQUESTS = ["POST", "PUT", "DELETE", "TRACE", "OPTIONS", "CONNECT", "PAT
         ##############################
 
         ##### DATABASE STUFF #####
+DATABASE = "webserver_logs"
 TABLE = "logfile"
 COLUMNS = "(username, ip, port, request)"
 BLACKLIST = "vars/blacklist.txt"

@@ -1,10 +1,5 @@
-        ##### PERSONAL WEBSITE DETAILS #####
-WEBSITE_URL = ""
-        ####################################
-
-
-
         ##### BASIC SERVER STUFF #####
+WEBSITE_URL = "https://google.com/"
 MAX_REQUEST = 1024
 MAX_URI = 128
 MAX_SIZE = 104857600          # Max file size is 100MB
