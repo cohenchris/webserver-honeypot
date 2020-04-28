@@ -5,6 +5,7 @@ declare -a pkgs=(
   python3-pip
   mysql-server
   libmariadbclient-dev
+  virtualenv
 )
 
 for pkg in ${pkgs[@]}
