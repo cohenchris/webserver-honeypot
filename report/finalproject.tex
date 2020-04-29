@@ -52,26 +52,21 @@ A honeypot is an extra layer of security for a network, and even though it may n
 One common use case for a honeypot is to set up some sort of monitoring, and collect information on any attackers.
 Analyzing this information can be valuable to help improve network security in other places that need it.
 
-READ ARTICLES AND PUT MORE HERE
-
 %------------------------------------------
 %                MOTIVATION               |
 %------------------------------------------
 
 \section{Motivation}
 I chose this project in order to learn more about my field of study, cyber security.
-As I've been applying to internships over the past year it's been increasingly evident to me that this field is tough to break into.
+As I've been applying to internships over the past year, it's been increasingly evident to me that this field is tough to break into.
 When a company looks for an employee to help secure their important assets, an inexperienced student is their last choice.
 Employers think highly of students who have completed personal projects, so this was the perfect opportunity for me to stand out.
 I knew that I had to start with something simple so that I didn't overwhelm myself, and creating a honeypot seemed like the best idea.
-
-The mention of a honeypot on the project rubric caught my eye because I had never heard the term before.
-The idea intrigued me - it seems so simple, yet effective if done right.
-I already had a simple HTTP web server from the first lab to build off of, so I wouldn't be spending much time on the basics.
-Additionally, in the future, I could convert it into a normal web server for my personal needs.
-Going into this project, I realized that this would be a challenge, as hosting a web server on your home network isn't advised.
-Exposing your network to the outside world will certainly pose a threat if done improperly.
-This ended up being a blessing in disguise, as it helped me learn much more about network security than I anticipated.
+The mention of a honeypot on the project rubric intrigued me - it seemed so simple, yet effective if done right.
+I already had a HTTP web server from the first lab to build off of, so I wouldn't be spending much time on the basics.
+Additionally, in the future, I could easily convert it into a normal web server for my personal needs.
+Going into this project, I realized that this would be tough, as hosting a web server on your home network is almost never advised.
+I welcomed the challenge - I knew that I would run into problems and inevitably learn much more than I set out to.
 
 %------------------------------------------
 %               RELATED WORK              |
@@ -108,26 +103,96 @@ I don't want spam requests to slow down the honeypot, either.
 
 \section{Completed Work}
 
-PUT WORK HERE INTEGRATED WITH SCHEDULE
+% --------------------
+% ----- CREATION -----
+% --------------------
+\subsection{Creation}
 
+\subsubsection{Server Response}
+In order to create an effective honeypot, I had to create a reasonably robust web server that looked convincing.
+This meant that I had to implement significantly more features on top of my original HTTP server for the first lab.
+The final product implements 14 different response codes, each serving a real purpose on the server.
+The most important of these are the 500 level response codes, informing the client of any internal server errors.
+I realize that this server will inevitably have bugs, so I make sure that the server cannot crash due to any exploits.
+
+\subsubsection{Browsing}
+Although the primary targets for this server are bots, there is always the chance that an actual person comes across the site.
+In this case, I wanted to make sure that it seemed like a real server, so I implemented interactive directory browsing.
+For each directory, the server displays HTML that give links to each other file and directory present, along with icons, each file's size, and last modified date.
+I cite aesthetic inspiration from Purdue's Spring 2020 CS354 directory browsing page.
+The server also supports 10 different file extensions, so each file that is present is able to be opened with the click of a mouse.
+This functionality also made the server a lot easier to test manually.
+
+\subsubsection{SSL Certification}
+The unit on Computer Security that we recently learned about inspired me to try SSL certification.
+Following the instructions present in \citetitle{ssl_pycon}, I was able to set up HTTPS, and used a self-signed certificate for testing.
+When the time came to deploy, I could no longer use the self-signed certificate.
+Luckily for me, I had already purchased a domain in the winter, so it was relatively simple to map the IP that I was serving to a subdomain.
+Using \textcite{letsencrypt}'s ``Certbot'' script, I was able to verify ownership of my domain and receive a legitimate SSL certificate.
+After setting up the certificates and private keys for my server, I made sure to force a 301 redirect on any clients that attempted to connect without HTTPS.
+
+\subsubsection{Logging}
+In order to know anything about how successful this project was, I needed to record connections made to the server.
+Using my very base-level knowledge of MySQL, I was able to set up a local instance that the web server logged to.
+Each listing contains the timestamp, client IP, client port, host name (if IP is known), and request given to the server.
+This simple step allowed me to analyze incoming connections at the end, and tweak the structure of the server when needed.
+
+\subsubsection{Blacklisting}
+At this point, there was nothing special about the honeypot.
+Inspired by \textcite{stackhoneypot}'s \citetitle{stackhoneypot}, I decided to implement blacklisting.
+I made a script that scanned the local MySQL database, checking for any repeat requests made.
+I had nowhere near enough time to analyze each individual connection for malicious activity, so I decided to just implement spam protection.
+If a client requests the same URL 10+ times within 3 seconds, that client will be IP banned.
+Even though a honeypot is supposed to absorb malicious traffic, a DDoS attack would certainly slow it down and decrease the effectiveness.
+Due to this, spam protection was necessary.
+
+\subsubsection{Honeypot Structure}
+A honeypot has no purpose without attackers.
+The idea is to make it look enticing to any malicious clients, so I made it look like a misconfigured server.
+The root directory consists of a fake web server, README, helper functions, and SSL certs/keys.
+This gives the illusion that the server is serving up the parent directory of the actual server root (titled 'htdocs').
+The exposed key files should be especially tempting to attackers.
+
+% --------------------
+% ---- DEPLOYMENT ----
+% --------------------
+\subsection{Deployment}
+
+\subsubsection{On Home Network}
 My intent was to deploy the honeypot by Saturday, April 25th, giving me just shy of a week to collect data.
-However, I ran into more problems than anticipated.
-The base code was completed by Saturday, as planned, but deploying it took a bit of work, as mentioned in the \textit{Proposed Work} section above.
-After I ironed out issues such as SSL certification and redirection to force an SSL connection, the initial test run was deployed on Sunday, April 26th.
-After encountering multiple attacks while hosting on my home network, I decided instead to host on Amazon Lightsail, a service that provides a VPS \footnote{Virtual Private Server}.
+However, I ran into many more problems than anticipated.
+The source code was completed by Saturday, as planned, but deploying it took a bit of tweaking, mainly concerning SSL certification.
+After all issues and bugs were seemingly ironed out, the initial test run was deployed on Sunday, April 26th.
+Within hours, my router had been taken down.
+I was aware of the risks of exposing your network to the public, but had no idea that it would be this much of a pain.
+Three or four internet outages later, after numerous failed attempts to better secure my network, I conceded.
+
+\subsubsection{On Amazon Lightsail}
+I decided instead to host on Amazon Lightsail, a service that provides a VPS \footnote{Virtual Private Server}.
 I chose this because it offered the first month free of charge, and gave me a full-fledged virtual Ubuntu 18.04 LTS server to work with, nearly identical to my home setup.
+Originally, I was skeptical.
+The whole reason that I attempted to set up my honeypot on my home network was because I thought that a home network would seem more enticing to attackers.
+Who would try to attack an Amazon server?
+Luckily, I got the same amount of traffic, if not more.
 After successfully setting up the VPS, I collected data for the rest of the week.
 I started out with my originally planned HTTPS server, but I noticed in the active server output that multiple clients attempted to connect with HTTP, were rejected, and never attempted to reconnect.
 Given the short period of time that I had to test, I wanted as many data points as possible.
-I saw no drawback in only using HTTP, especially since I'm not sending anything important or hosting the website on my own network.
-From Wednesday, April 29th and onwards, I solely used HTTP to serve requests, giving me more data points to work with.
+I saw no drawback in accepting HTTP connections as well, especially since I'm not sending anything important or hosting the website on my own network.
+From Wednesday, April 29th and onwards, my server defaulted to HTTPS, but any HTTP requests sent would also be served, giving me more data points to work with.
+
+
+% --------------------
+% ----- ANALYSIS -----
+% --------------------
+\subsection{Analysis}
+
+
 
 %------------------------------------------
 %                CONCLUSION               |
 %------------------------------------------
 
 \section{Conclusion}
-
 
 \clearpage
 \printbibliography
