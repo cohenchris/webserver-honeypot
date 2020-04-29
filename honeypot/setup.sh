@@ -11,8 +11,6 @@ declare -a pkgs=(
   python3.8-dev
   python3.8
   python3-pip
-  mysql-server*
-  mysql-client*
   virtualenv
 )
 for pkg in ${pkgs[@]}
@@ -26,6 +24,17 @@ source honeyenv/bin/activate
 
 # Install python dependencies
 pip3 install -r requirements.txt
+
+declare -a pkgs=(
+  mysql-server*
+  mysql-client*
+)
+for pkg in ${pkgs[@]}
+do
+  sudo apt-get install $pkg -y
+done
+
+sudo apt-get autoremove
 
 # Change permission of forbidden.txt
 if [[ -r "server_root/htdocs/forbidden.txt" ]]; then
