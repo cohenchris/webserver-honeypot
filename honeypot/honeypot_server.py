@@ -152,12 +152,16 @@ def main(args):
                     print(f"accepted HTTPS connection with address {client_addr}")
                     threading.Thread(target=dispatch_connection, args=(ssl_client_conn, client_addr)).start()
             except ssl.SSLError as e:
+                if LOG:
+                    threading.Thread(target=log, args=(client_addr[0], client_addr[1], "SSL ERROR")).start()  # LOGGING
                 print(f"SSLError: {e}")
                 # 301 Moved Permanently - HTTP Connection Received
                 client_sock, client_addr = server_sock.accept()        # If it messes up, need to re-accept connection
                 response, response_data = create_response(301, None, None, None)
                 send_to_client(client_sock, client_addr, None, response, response_data)
             except Exception as e:
+                if LOG:
+                    threading.Thread(target=log, args=(client_addr[0], client_addr[1], "MISC ERROR")).start()  # LOGGING
                 print(f"MISC ERROR: {e}")
                 if client_sock:
                     print(f"Client socket {client_addr} closed...")
