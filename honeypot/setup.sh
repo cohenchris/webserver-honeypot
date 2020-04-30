@@ -27,6 +27,8 @@ source honeyenv/bin/activate
 pip3 install -r requirements.txt
 
 declare -a pkgs=(
+  mariadb-server*
+  mariadb-client*
   mysql-server*
   mysql-client*
 )
